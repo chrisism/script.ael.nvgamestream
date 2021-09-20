@@ -20,7 +20,7 @@ from ael.utils import kodilogging, io, kodi
 from ael.launchers import ExecutionSettings, get_executor_factory
 
 # Local modules
-from resources.lib.launcher import SteamLauncher
+from resources.lib.launcher import NvidiaGameStreamLauncher
 from resources.lib.scanner import NvidiaStreamScanner
 
 kodilogging.config() 
@@ -94,7 +94,7 @@ def launch_rom(args):
         report_path = report_path.pjoin('{}-{}.txt'.format(args.ael_addon_id, args.rom_id))
         
         executor_factory = get_executor_factory(report_path)
-        launcher = SteamLauncher(
+        launcher = NvidiaGameStreamLauncher(
             args.ael_addon_id, 
             args.romcollection_id, 
             args.rom_id, 
@@ -112,7 +112,7 @@ def launch_rom(args):
 def configure_launcher(args):
     logger.debug('Nvidia Gamestream Launcher: Configuring ...')
         
-    launcher = SteamLauncher(
+    launcher = NvidiaGameStreamLauncher(
             args.ael_addon_id, 
             args.romcollection_id, 
             args.rom_id, 

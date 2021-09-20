@@ -18,6 +18,9 @@ from __future__ import division
 
 import logging
 import os
+import collections
+
+# -- Kodi packages --
 import xbmcgui
 
 # --- AEL packages ---
@@ -44,6 +47,14 @@ class NvidiaGameStreamLauncher(LauncherABC):
         addon_id = kodi.get_addon_id()
         return addon_id
 
+    def get_certificates_path(self): 
+        if not 'certificates_path' in self.launcher_settings: return None
+        path = self.launcher_settings['certificates_path']
+        if path == '': return None
+        return io.FileName(path)
+
+    def get_server_id(self): return self.launcher_settings['server_id'] if 'server_id' in self.launcher_settings else 0
+    
     # --------------------------------------------------------------------------------------------
     # Launcher build wizard methods
     # --------------------------------------------------------------------------------------------
@@ -81,9 +92,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select the path with valid certificates', 
             0, '', self._builder_validate_nvidia_certificates) 
         
-        return wizard
-    
-    def _editor_get_wizard(self, wizard):
         return wizard
     
     def _builder_generatePairPinCode(self, input, item_key, launcher):
@@ -131,7 +139,70 @@ class NvidiaGameStreamLauncher(LauncherABC):
         logger.debug('validate_gamestream_server_connection() Found correct gamestream server with id "{}" and hostname "{}"'.format(launcher['server_uuid'],launcher['server_hostname']))
 
         return input
+       
+    def _builder_get_edit_options(self) -> dict:
+        streamClient = self.launcher_settings['application']
+        if streamClient == 'NVIDIA':
+            streamClient = 'Nvidia'
+        elif streamClient == 'MOONLIGHT':
+            streamClient = 'Moonlight'
+
+        options = collections.OrderedDict()
+        options[self._change_application]   = "Change Application: '{0}'".format(streamClient)
+        options[self._change_server_id]     = "Change server ID: '{}'".format(self.get_server_id())
+        options[self._change_server_host]   = "Change host: '{}'".format(self.launcher_settings['server'])
+        options[self._change_certificates]  = "Change certificates: '{}'".format(self.get_certificates_path().getPath())
+        options[self._update_server_info]   = "Update server info"
+        return options
     
+    def _change_application(self):
+        current_application = self.launcher_settings['application']
+        
+        if io.is_android():            
+            options = {'NVIDIA': 'Nvidia', 'MOONLIGHT': 'Moonlight'}  
+        else:
+            options = {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'}
+
+        dialog = kodi.OrdDictionaryDialog()    
+        selected_application = dialog.select('Select the client', options)
+            
+        if io.is_android() and not self._builder_check_if_selected_gamestream_client_exists(selected_application, None, None):
+            return False
+
+        if not io.is_android() and selected_application == 'JAVA':
+            selected_application = xbmcgui.Dialog().browse(1, 'Select the Gamestream client jar', 'files',
+                                                      self._builder_get_appbrowser_filter('application', self.launcher_settings),
+                                                      False, False, current_application)
+
+        if selected_application is None or selected_application == current_application:
+            return False
+
+        self.launcher_settings['application'] = selected_application
+    
+    def _change_server_id(self):
+        server_id = kodi.dialog_numeric('Edit Server ID', self.get_server_id())
+        if server_id is None: return
+        self.launcher_settings['server_id'] = server_id
+    
+    def _change_server_host(self):
+        server_host = kodi.dialog_ipaddr('Edit Gamestream Host', self.launcher_settings['server'])
+        if server_host is None: return
+        self.launcher_settings['server_hostname'] = server_host
+        
+    def _change_certificates(self):
+        current_path  = self.get_certificates_path().getPath()
+        selected_path = kodi.browse(type=0, text='Select the path with valid certificates', preselected_path=current_path) 
+        if selected_path is None or selected_path == current_path:
+            logger.debug('_change_certificates(): Selected path = NONE')
+            return
+
+        validated_path = self._builder_validate_nvidia_certificates(selected_path, 'certificates_path', self.launcher_settings)
+        self.launcher_settings['certificates_path'] = validated_path
+
+    def _update_server_info(self):
+        if not kodi.dialog_yesno('Are you sure you want to update all server info?'): return
+        self._builder_validate_gamestream_server_connection(self.launcher_settings['server'],'server', self.launcher_settings)
+      
     # ---------------------------------------------------------------------------------------------
     # Execution methods
     # ---------------------------------------------------------------------------------------------
