@@ -19,6 +19,10 @@ from __future__ import division
 
 import logging
 import typing
+import collections
+
+# --- Kodi packages --
+import xbmcgui
 
 # --- AEL packages ---
 from ael import report, api
@@ -28,6 +32,7 @@ from ael.scanners import RomScannerStrategy, ROMCandidateABC
 
 # Local modules
 from gamestream import GameStreamServer
+import crypto
 
 logger = logging.getLogger(__name__)
         
@@ -75,12 +80,86 @@ class NvidiaStreamScanner(RomScannerStrategy):
         if path: return io.FileName(path)
         return None
     
-    def _configure_get_wizard(self, wizard) -> kodi.WizardDialog:
-        wizard = kodi.WizardDialog_Keyboard(wizard, 'steamid','Steam account ID')        
+    def _configure_get_wizard(self, wizard) -> kodi.WizardDialog: 
+          #UTILS_OPENSSL_AVAILABLE
+        logger.debug('NvidiaStreamScanner::_configure_get_wizard() SSL: "{0}"'.format(crypto.UTILS_OPENSSL_AVAILABLE))
+        logger.debug('NvidiaStreamScanner::_configure_get_wizard() Crypto: "{0}"'.format(crypto.UTILS_CRYPTOGRAPHY_AVAILABLE))
+        logger.debug('NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{0}"'.format(crypto.UTILS_PYCRYPTO_AVAILABLE))
+        
+        info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates. '
+        info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi.'
+        info_txt += 'Please read the wiki for details how to create them before you go further.'
+
+        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'certificates_path', 'Pairing with Gamestream PC',
+            info_txt)
+        wizard = kodi.WizardDialog_Input(wizard, 'server', 'Gamestream Server',
+            xbmcgui.INPUT_IPADDRESS, self._builder_validate_gamestream_server_connection)
+        # Pairing with pin code will be postponed untill crypto and certificate support in kodi
+        # wizard = WizardDialog_Dummy(wizard, 'pincode', None, _builder_generatePairPinCode)
+        wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
+            self._builder_try_to_resolve_path_to_nvidia_certificates)
+        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select the path with valid certificates', 
+            0, '', self._builder_validate_nvidia_certificates) 
+        
         return wizard
       
     def _configure_post_wizard_hook(self):
         return True
+    
+    def _builder_try_to_resolve_path_to_nvidia_certificates(self, input, item_key, launcher):
+        path = GameStreamServer.try_to_resolve_path_to_nvidia_certificates()
+        return path
+
+    def _builder_validate_nvidia_certificates(self, input, item_key, launcher):
+        certificates_path = io.FileName(input)
+        gs = GameStreamServer(input, certificates_path)
+        if not gs.validate_certificates():
+            kodi.notify_warn(
+                'Could not find certificates to validate. Make sure you already paired with '
+                'the server with the Shield or Moonlight applications.')
+
+        return certificates_path.getPath()
+    
+    def _builder_validate_gamestream_server_connection(self, input, item_key, launcher):
+        gs = GameStreamServer(input, None)
+        if not gs.connect():
+            kodi.notify_warn('Could not connect to gamestream server')
+            return input
+
+        launcher['server_id'] = 4 # not yet known what the origin is
+        launcher['server_uuid'] = gs.get_uniqueid()
+        launcher['server_hostname'] = gs.get_hostname()
+
+        logger.debug('validate_gamestream_server_connection() Found correct gamestream server with id "{}" and hostname "{}"'.format(launcher['server_uuid'],launcher['server_hostname']))
+
+        return input
+    
+    def _configure_get_edit_options(self) -> dict:
+
+        options = collections.OrderedDict()
+        options[self._change_server_host]   = "Change host: '{}'".format(self.scanner_settings['server'])
+        options[self._change_certificates]  = "Change certificates: '{}'".format(self.get_certificates_path().getPath())
+        options[self._update_server_info]   = "Update server info"
+        return options
+    
+    def _change_server_host(self):
+        server_host = kodi.dialog_ipaddr('Edit Gamestream Host', self.scanner_settings['server'])
+        if server_host is None: return
+        self.scanner_settings['server_hostname'] = server_host
+        
+    def _change_certificates(self):
+        current_path  = self.get_certificates_path().getPath()
+        selected_path = kodi.browse(type=0, text='Select the path with valid certificates', preselected_path=current_path) 
+        if selected_path is None or selected_path == current_path:
+            logger.debug('_change_certificates(): Selected path = NONE')
+            return
+
+        validated_path = self._builder_validate_nvidia_certificates(selected_path, 'certificates_path', self.scanner_settings)
+        self.scanner_settings['certificates_path'] = validated_path
+
+    def _update_server_info(self):
+        if not kodi.dialog_yesno('Are you sure you want to update all server info?'): return
+        self._builder_validate_gamestream_server_connection(self.scanner_settings['server'],'server', self.scanner_settings)
             
     # ~~~ Scan for new files (*.*) and put them in a list ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def _getCandidates(self, launcher_report: report.Reporter) -> typing.List[ROMCandidateABC]:
