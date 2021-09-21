@@ -66,11 +66,11 @@
                 </setting>
                 <setting id="ael.launcher.friendlyname" type="string" label="Launcher friendlyname" help="">
                     <level>4</level>
-                    <default>Nvidia Gamestream launcher</default>
+                    <default>Nvidia Gamestream</default>
                 </setting>
                 <setting id="ael.scanner.friendlyname" type="string" label="Scanner friendlyname" help="">
                     <level>4</level>
-                    <default>Nvidia Gamestream scanner</default>
+                    <default>Nvidia Gamestream</default>
                 </setting>
             </group>
         </category>
