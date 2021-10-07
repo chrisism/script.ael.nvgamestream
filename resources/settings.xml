@@ -3,7 +3,7 @@
     <section id="script.ael.nvgamestream">
         <category id="ael_launching" label="30010">
 			<group id="1">
-                <setting id="media_state_action" type="enum" label="30121" help="">
+                <setting id="media_state_action" type="integer" label="30121" help="">
                     <level>0</level>
                     <default>0</default>
                     <constraints>
