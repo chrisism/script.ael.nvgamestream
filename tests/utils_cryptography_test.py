@@ -1,37 +1,61 @@
-import unittest
-import mock
-from mock import *
-from tests.fakes import *
+import unittest, os
+import unittest.mock
+from unittest.mock import MagicMock, patch
 
-import os
+import logging
+import os, binascii
+from datetime import timedelta
+from datetime import datetime
 
-from resources.utils import *
-from resources.constants import *
+from base64 import b64encode
+
+#from fakes import FakeProgressDialog, random_string
+
+logging.basicConfig(format = '%(asctime)s %(module)s %(levelname)s: %(message)s',
+                datefmt = '%m/%d/%Y %I:%M:%S %p', level = logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+from resources.lib.crypto import create_self_signed_cert, getCertificatePublicKey
+
+from ael.utils import io
 
 # pip install pyopenssl
-from OpenSSL import crypto, SSL
+try:
+    from OpenSSL import crypto, SSL
+    UTILS_OPENSSL_AVAILABLE = True
+except:
+    UTILS_OPENSSL_AVAILABLE = False
 
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
+try:
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
+    UTILS_CRYPTOGRAPHY_AVAILABLE = True
+except:
+    UTILS_CRYPTOGRAPHY_AVAILABLE = False
 
 # pip install pycrypto or pycryptodome
 # http://aka.ms/vcpython27
-from Crypto.PublicKey import RSA 
-from Crypto.Signature import PKCS1_v1_5 
-from Crypto.Hash import SHA256 
+try:
+    from Crypto.PublicKey import RSA
+    from Crypto.Signature import PKCS1_v1_5
+    from Crypto.Hash import SHA256
+    from Crypto.Cipher import AES
+    from Crypto.Random import get_random_bytes
+    UTILS_PYCRYPTO_AVAILABLE = True
+except:
+    UTILS_PYCRYPTO_AVAILABLE = False
 
 class Test_cryptography_test(unittest.TestCase):
     
-    @classmethod
-    def setUpClass(cls):
-        set_log_level(LOG_DEBUG)
+    #@classmethod
+    #def setUpClass(cls):
         
     def test_get_public_key_from_certificate(self):
         
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
-        key_path = FakeFile(test_dir + '/nv_client_test.key')
+        cert_path = io.FileName(test_dir + '/nv_client_test.crt')
+        key_path = io.FileName(test_dir + '/nv_client_test.key')
 
         # act
         create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
@@ -90,8 +114,8 @@ class Test_cryptography_test(unittest.TestCase):
         actual = target.hashToHex(input)
         actual2 = target.hashToHex(input)
 
-        print actual
-        print actual2
+        print(actual)
+        print(actual2)
 
         # assert
         self.assertEquals(expected, actual)
@@ -107,16 +131,16 @@ class Test_cryptography_test(unittest.TestCase):
             file_contents = f.read()
 
         #print file_contents
-        print '----------------------------'
-        print binascii.hexlify(file_contents)
-        print '----------------------------'
-        print binascii.hexlify(ssl.DER_cert_to_PEM_cert(file_contents))
-        print '----------------------------'
-        hex = base64.b64encode(binascii.hexlify(file_contents))
-        print hex
-        print '----------------------------'
-        encoded = base64.b64encode(file_contents)
-        print encoded
+        print('----------------------------')
+        print(binascii.hexlify(file_contents))
+        print('----------------------------')
+        print(binascii.hexlify(ssl.DER_cert_to_PEM_cert(file_contents)))
+        print('----------------------------')
+        hex = b64encode(binascii.hexlify(file_contents))
+        print(hex)
+        print( '----------------------------')
+        encoded = b64encode(file_contents)
+        print(encoded)
 
 if __name__ == '__main__':
     unittest.main()
