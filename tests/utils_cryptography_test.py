@@ -9,15 +9,13 @@ from datetime import datetime
 
 from base64 import b64encode
 
-#from fakes import FakeProgressDialog, random_string
+from fakes import FakeFile
 
 logging.basicConfig(format = '%(asctime)s %(module)s %(levelname)s: %(message)s',
                 datefmt = '%m/%d/%Y %I:%M:%S %p', level = logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-from resources.lib.crypto import create_self_signed_cert, getCertificatePublicKey
-
-from ael.utils import io
+from resources.lib.crypto import create_self_signed_cert, getCertificatePublicKey, HashAlgorithm
 
 # pip install pyopenssl
 try:
@@ -54,8 +52,8 @@ class Test_cryptography_test(unittest.TestCase):
         
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = io.FileName(test_dir + '/nv_client_test.crt')
-        key_path = io.FileName(test_dir + '/nv_client_test.key')
+        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
+        key_path = FakeFile(test_dir + '/nv_client_test.key')
 
         # act
         create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
@@ -112,14 +110,11 @@ class Test_cryptography_test(unittest.TestCase):
 
         # act
         actual = target.hashToHex(input)
-        actual2 = target.hashToHex(input)
-
         print(actual)
-        print(actual2)
+        actual_str = actual.decode('utf-8`')
 
         # assert
-        self.assertEquals(expected, actual)
-        self.assertEquals(expected, actual2)
+        self.assertEquals(expected, actual_str)
         
     @unittest.skip('PEM conversion testing with an original key')
     def test_converting_pkcs8_to_pem(self):

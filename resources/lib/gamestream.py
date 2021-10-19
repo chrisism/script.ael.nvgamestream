@@ -29,7 +29,7 @@ import xml.etree.ElementTree as ET
 from ael.utils import net, io, text, kodi
 
 # Local modules
-import crypto
+import resources.lib.crypto as crypto
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class GameStreamServer(object):
         self.pem_cert_data = None
         self.key_cert_data = None
 
-    def _perform_server_request(self, end_point,  useHttps=True, parameters = None):
+    def _perform_server_request(self, end_point,  useHttps=True, parameters:dict = None):
         
         if useHttps:
             url = "https://{0}:47984/{1}?uniqueid={2}&uuid={3}".format(self.host, end_point, self.unique_id, uuid.uuid4().hex)
@@ -68,7 +68,7 @@ class GameStreamServer(object):
             url = "http://{0}:47989/{1}?uniqueid={2}&uuid={3}".format(self.host, end_point, self.unique_id, uuid.uuid4().hex)
 
         if parameters:
-            for key, value in parameters.iteritems():
+            for key, value in parameters.items():
                 url = url + "&{0}={1}".format(key, value)
 
         handler = net.HTTPSClientAuthHandler(self.certificate_key_file_path.getPath(), self.certificate_file_path.getPath())
