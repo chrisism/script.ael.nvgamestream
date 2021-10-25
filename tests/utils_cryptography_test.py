@@ -1,6 +1,5 @@
 import unittest, os
 import unittest.mock
-from unittest.mock import MagicMock, patch
 
 import logging
 import os, binascii
@@ -118,6 +117,7 @@ class Test_cryptography_test(unittest.TestCase):
         
     @unittest.skip('PEM conversion testing with an original key')
     def test_converting_pkcs8_to_pem(self):
+        import ssl
          # arrange
         test_file = "C:\\Projects\\Kodi\\AEL\\plugin.program.advanced.emulator.launcher\\tests\\assets\\nvidia.key" 
           
