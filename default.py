@@ -36,7 +36,7 @@ addon_version   = addon.getAddonInfo('version')
 # ---------------------------------------------------------------------------------------------
 def run_plugin():
     # --- Some debug stuff for development ---
-    logger.info('------------ Called Advanced Emulator Launcher Plugin: Nvidia Gamestream ------------')
+    logger.info('------------ Called Advanced Kodi Launcher Plugin: Nvidia Gamestream ------------')
     logger.info('addon.id         "{}"'.format(addon_id))
     logger.info('addon.version    "{}"'.format(addon_version))
     logger.info('sys.platform     "{}"'.format(sys.platform))
@@ -70,7 +70,7 @@ def run_plugin():
     else:
         kodi.dialog_OK(text=parser.format_help())
     
-    logger.debug('Advanced Emulator Launcher Plugin: Steam Library -> exit')
+    logger.debug('Advanced Kodi Launcher Plugin: Steam Library -> exit')
 
 # ---------------------------------------------------------------------------------------------
 # Launcher methods.

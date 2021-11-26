@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Advanced Emulator Launcher: Gamestream server connection objects
+# Advanced Kodi Launcher: Gamestream server connection objects
 #
 # Copyright (c) Chrisism <crizizz@gmail.com>
 #

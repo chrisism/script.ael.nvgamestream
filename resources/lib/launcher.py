@@ -1,5 +1,5 @@
 #
-# Advanced Emulator Launcher: Nvidia gamestream launcher implementation
+# Advanced Kodi Launcher: Nvidia gamestream launcher implementation
 #
 # Copyright (c) Chrisism <crizizz@gmail.com>
 #

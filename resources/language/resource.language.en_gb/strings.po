@@ -1,5 +1,5 @@
 # Kodi Media Center language file
-# Addon Name: Advanced Emulator Launcher : Nvidia Gamestream plugin
+# Addon Name: Advanced Kodi Launcher : Nvidia Gamestream plugin
 # Addon id: script.ael.nvgamestream
 msgid ""
 msgstr ""

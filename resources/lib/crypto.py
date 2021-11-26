@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Advanced Emulator Launcher: Crytpo utils
+# Advanced Kodi Launcher: Crytpo utils
 #
 # Copyright (c) Chrisism <crizizz@gmail.com>
 #

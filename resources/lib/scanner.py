@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Advanced Emulator Launcher: Nvidia gamestream scanner implementation
+# Advanced Kodi Launcher: Nvidia gamestream scanner implementation
 #
 # Copyright (c) Chrisism <crizizz@gmail.com>
 #
