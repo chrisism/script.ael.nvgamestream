@@ -80,8 +80,8 @@ class Test_cryptography_test(unittest.TestCase):
         cert.get_subject().C = "GL"
         cert.get_subject().ST = "GL"
         cert.get_subject().L = "Kodi"
-        cert.get_subject().O = "ael"
-        cert.get_subject().OU = "ael"
+        cert.get_subject().O = "akl"
+        cert.get_subject().OU = "akl"
         cert.get_subject().CN = cert_name
         cert.set_serial_number(1000)
         cert.set_notBefore(now.strftime("%Y%m%d%H%M%SZ").encode())
@@ -119,7 +119,7 @@ class Test_cryptography_test(unittest.TestCase):
     def test_converting_pkcs8_to_pem(self):
         import ssl
          # arrange
-        test_file = "C:\\Projects\\Kodi\\AEL\\plugin.program.advanced.emulator.launcher\\tests\\assets\\nvidia.key" 
+        test_file = "C:\\Projects\\Kodi\\AKL\\plugin.program.advanced.emulator.launcher\\tests\\assets\\nvidia.key" 
           
         file_contents = ''
         with open(test_file, 'r') as f:

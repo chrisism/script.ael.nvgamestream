@@ -21,8 +21,8 @@
 import sys, os
 import logging
 
-# AEL main imports
-from ael.utils import kodilogging, io
+# AKL main imports
+from akl.utils import kodilogging, io
 
 # Local modules
 from resources.lib.gamestream import GameStreamServer

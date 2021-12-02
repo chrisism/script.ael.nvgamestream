@@ -78,8 +78,8 @@ def create_self_signed_cert(cert_name, cert_file_path, key_file_path):
     cert.get_subject().C = "GL"
     cert.get_subject().ST = "GL"
     cert.get_subject().L = "Kodi"
-    cert.get_subject().O = "ael"
-    cert.get_subject().OU = "ael"
+    cert.get_subject().O = "akl"
+    cert.get_subject().OU = "akl"
     cert.get_subject().CN = cert_name
     cert.set_serial_number(1000)
     cert.set_notBefore(now.strftime("%Y%m%d%H%M%SZ").encode())

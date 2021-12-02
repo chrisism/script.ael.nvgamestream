@@ -25,8 +25,8 @@ import uuid
 import random
 import xml.etree.ElementTree as ET
 
-# --- AEL packages ---
-from ael.utils import net, io, text, kodi
+# --- AKL packages ---
+from akl.utils import net, io, text, kodi
 
 # Local modules
 import resources.lib.crypto as crypto
@@ -165,7 +165,7 @@ class GameStreamServer(object):
         # Start pairing with server
         logger.debug('Start pairing with server')
         pairing_result = self._perform_server_request('pair', False, {
-            'devicename': 'ael', 
+            'devicename': 'akl', 
             'updateState': 1, 
             'phrase': 'getservercert', 
             'salt': binascii.hexlify(salt),
@@ -193,7 +193,7 @@ class GameStreamServer(object):
         # Send the encrypted challenge to the server
         logger.debug('Sending encrypted challenge to the server')
         pairing_challenge_result = self._perform_server_request('pair', False, {
-            'devicename': 'ael', 
+            'devicename': 'akl', 
             'updateState': 1, 
             'clientchallenge': encrypted_challenge })
         
@@ -225,7 +225,7 @@ class GameStreamServer(object):
         # Send the challenge response to the server
         logger.debug('Sending the challenge response to the server')
         pairing_secret_response = self._perform_server_request('pair', False, {
-            'devicename': 'ael', 
+            'devicename': 'akl', 
             'updateState': 1, 
             'serverchallengeresp': challenge_response_encrypted })
         
@@ -274,7 +274,7 @@ class GameStreamServer(object):
         client_pairing_secret = client_secret + signed_client_secret
 
         client_pairing_secret_response = self._perform_server_request('pair', False, {
-            'devicename': 'ael', 
+            'devicename': 'akl', 
             'updateState': 1, 
             'clientpairingsecret':  binascii.hexlify(client_pairing_secret)})
         
@@ -287,7 +287,7 @@ class GameStreamServer(object):
         # Do the initial challenge over https
         logger.debug('Initial challenge again')
         pair_challenge_response = self._perform_server_request('pair', True, {
-            'devicename': 'ael', 
+            'devicename': 'akl', 
             'updateState': 1, 
             'phrase':  'pairchallenge'})
 

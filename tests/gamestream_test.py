@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 from resources.lib.gamestream import GameStreamServer
 
-from ael.utils import io
+from akl.utils import io
 
 class Test_gamestream(unittest.TestCase):
 

@@ -23,9 +23,9 @@ import collections
 # -- Kodi packages --
 import xbmcgui
 
-# --- AEL packages ---
-from ael.utils import kodi, io, text
-from ael.launchers import LauncherABC
+# --- AKL packages ---
+from akl.utils import kodi, io, text
+from akl.launchers import LauncherABC
 
 # Local modules
 from gamestream import GameStreamServer

@@ -24,11 +24,11 @@ import collections
 # --- Kodi packages --
 import xbmcgui
 
-# --- AEL packages ---
-from ael import report, api
-from ael.utils import kodi, io
+# --- AKL packages ---
+from akl import report, api
+from akl.utils import kodi, io
 
-from ael.scanners import RomScannerStrategy, ROMCandidateABC
+from akl.scanners import RomScannerStrategy, ROMCandidateABC
 
 # Local modules
 from gamestream import GameStreamServer

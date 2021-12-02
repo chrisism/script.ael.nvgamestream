@@ -1,6 +1,6 @@
 # Kodi Media Center language file
 # Addon Name: Advanced Kodi Launcher : Nvidia Gamestream plugin
-# Addon id: script.ael.nvgamestream
+# Addon id: script.akl.nvgamestream
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
