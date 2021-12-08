@@ -65,7 +65,7 @@ stages:
       - task: ArchiveFiles@2
         inputs:
           rootFolderOrFile: '$(build.artifactstagingdirectory)/script.akl.nvgamestream'
-          includeRootFolder: false
+          includeRootFolder: true
           archiveType: 'zip'
           archiveFile: '$(build.artifactstagingdirectory)/package/script.akl.nvgamestream-$(packageVersion).zip'
           replaceExistingArchive: true
@@ -168,7 +168,7 @@ stages:
 
             - script: |
                 git add .
-                git commit -m "Release $(Build.BuildNumber)"
+                git commit -m "$(Build.DefinitionName) Release $(Build.BuildNumber)"
               workingDirectory: $(Pipeline.Workspace)/repository.chrisism.dev/
               displayName: 'Git - Add and commit'    
 
@@ -248,7 +248,7 @@ stages:
 
             - script: |
                 git add .
-                git commit -m "Release $(Build.BuildNumber)"
+                git commit -m "$(Build.DefinitionName) Release $(Build.BuildNumber)"
               workingDirectory: $(Pipeline.Workspace)/repository.chrisism/
               displayName: 'Git - Add and commit'    
 
