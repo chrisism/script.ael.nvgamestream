@@ -52,6 +52,7 @@ class Test_cryptography_test(unittest.TestCase):
         cls.ROOT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR, os.pardir))
         cls.TEST_ASSETS_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'assets/'))
         cls.TEST_OUTPUT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'output/'))
+        if not os.path.exists(cls.TEST_OUTPUT_DIR): os.makedirs(cls.TEST_OUTPUT_DIR)
         
     def test_get_public_key_from_certificate(self):
         
