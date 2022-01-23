@@ -1,6 +1,6 @@
 # Advanced Kodi Launcher : Nvidia Gamestream plugin
 
-Nvidia Gamestream plugin for AKL
+Nvidia Gamestream plugin for AKL which enables you to scan the games available in your Gamestream library and launch them from AKL.
 
 | Release | Status |
 |----|----|
