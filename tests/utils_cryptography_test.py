@@ -8,7 +8,7 @@ from datetime import datetime
 
 from base64 import b64encode
 
-from fakes import FakeFile
+from tests.fakes import FakeFile
 
 logging.basicConfig(format = '%(asctime)s %(module)s %(levelname)s: %(message)s',
                 datefmt = '%m/%d/%Y %I:%M:%S %p', level = logging.DEBUG)
@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 from resources.lib.crypto import create_self_signed_cert, getCertificatePublicKey, HashAlgorithm
 
-# pip install pyopenssl
 try:
     from OpenSSL import crypto, SSL
     UTILS_OPENSSL_AVAILABLE = True
@@ -30,8 +29,6 @@ try:
 except:
     UTILS_CRYPTOGRAPHY_AVAILABLE = False
 
-# pip install pycrypto or pycryptodome
-# http://aka.ms/vcpython27
 try:
     from Crypto.PublicKey import RSA
     from Crypto.Signature import PKCS1_v1_5
@@ -44,8 +41,17 @@ except:
 
 class Test_cryptography_test(unittest.TestCase):
     
-    #@classmethod
-    #def setUpClass(cls):
+    ROOT_DIR = ''
+    TEST_DIR = ''
+    TEST_ASSETS_DIR = ''
+    TEST_OUTPUT_DIR = ''
+
+    @classmethod
+    def setUpClass(cls):
+        cls.TEST_DIR = os.path.dirname(os.path.abspath(__file__))
+        cls.ROOT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR, os.pardir))
+        cls.TEST_ASSETS_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'assets/'))
+        cls.TEST_OUTPUT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'output/'))
         
     def test_get_public_key_from_certificate(self):
         
@@ -65,8 +71,8 @@ class Test_cryptography_test(unittest.TestCase):
     def test_create_certificates(self):
 
         cert_name = "NVIDIA GameStream Client"
-        cert_file_path = 'c:\\temp\\keys\\nvidia.crt'
-        key_file_path = 'c:\\temp\\keys\\nvidia.key'
+        cert_file_path = os.path.join(self.TEST_OUTPUT_DIR, 'nvidia.crt')
+        key_file_path = os.path.join(self.TEST_OUTPUT_DIR, 'nvidia.key')
 
         # create a key pair
         k = crypto.PKey()
@@ -113,13 +119,13 @@ class Test_cryptography_test(unittest.TestCase):
         actual_str = actual.decode('utf-8`')
 
         # assert
-        self.assertEquals(expected, actual_str)
+        self.assertEqual(expected, actual_str)
         
     @unittest.skip('PEM conversion testing with an original key')
     def test_converting_pkcs8_to_pem(self):
         import ssl
          # arrange
-        test_file = "C:\\Projects\\Kodi\\AKL\\plugin.program.advanced.emulator.launcher\\tests\\assets\\nvidia.key" 
+        test_file = os.path.join(self.TEST_ASSETS_DIR, 'certs/nvidia.key')
           
         file_contents = ''
         with open(test_file, 'r') as f:

@@ -1,0 +1,7 @@
+kodi.tools==1.0.0
+Kodistubs==19.0.3
+pytest==6.2.5
+script.module.akl==1.0.3
+cryptography==36.0.1
+pycryptodome==3.12.0
+pyOpenSSL==21.0.0

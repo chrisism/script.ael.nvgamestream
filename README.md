@@ -1,9 +1,23 @@
-# script.akl.nvgamestream
+# Advanced Kodi Launcher : Nvidia Gamestream plugin
+
 Nvidia Gamestream plugin for AKL
 
 | Release | Status |
 |----|----|
 | Stable |[![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=main)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=main) |
+| Beta | [![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=release/1.0.0)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=release/1.0.0) |
+| Unstable | [![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=dev)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=dev) |
+
+### Kodi forum thread ###
+
+More information and discussion about AKL can be found in the [Advanced Kodi Launcher thread] 
+in the Kodi forum.
+
+[Advanced Kodi Launcher thread]: https://forum.kodi.tv/showthread.php?tid=366351
+
+### Documentation ###
+
+Read more about AKL on the main plugin's [ReadMe](https://github.com/chrisism/plugin.program.akl/blob/master/README.md) page.
 
 # Pairing with Nvidia Gamestream PC #
 
@@ -15,8 +29,7 @@ the following actions.
 
 ## 1. Run custom pairing python scripts 
 
-Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and 
-the needed libraries, like the OpenSSL. Then go to the /tools folder of the source code.
+Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and the needed libraries, like the OpenSSL. Then go to the /tools folder of the source code.
 The script must be called with two parameters, host and path where to store the new certificates.
 
 Example: 
@@ -42,3 +55,4 @@ openssl pkcs8 -topk8 -inform DER -outform PEM -nocrypt -in <MOONLIGHT_KEY_FILE_P
 
 Copy the new *.key and *.crt to a separate folder. Now you can use these certificate files when creating your launcher in AKL 
 in Kodi.
+

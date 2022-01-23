@@ -26,11 +26,6 @@ class Test_gamestream(unittest.TestCase):
         cls.TEST_DIR = os.path.dirname(os.path.abspath(__file__))
         cls.ROOT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR, os.pardir))
         cls.TEST_ASSETS_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'assets/'))
-                
-        print('ROOT DIR: {}'.format(cls.ROOT_DIR))
-        print('TEST DIR: {}'.format(cls.TEST_DIR))
-        print('TEST ASSETS DIR: {}'.format(cls.TEST_ASSETS_DIR))
-        print('---------------------------------------------------------------------------')
 
     def read_file(self, path, encoding=None):
         with open(path, 'r', encoding=encoding) as f:
@@ -40,8 +35,8 @@ class Test_gamestream(unittest.TestCase):
     def test_connecting_to_a_gamestream_server(self, http_mock: MagicMock):
         
         # arrange
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "\\gamestreamserver_response.xml", encoding='utf-16')
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR))
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16')
+        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
         
         # act
         actual = server.connect()
@@ -54,8 +49,8 @@ class Test_gamestream(unittest.TestCase):
     def test_get_the_version_of_the_gamestream_server(self, http_mock: MagicMock):
          
         # arrange
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "\\gamestreamserver_response.xml", encoding='utf-16')
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR))
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16')
+        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR, debug_mode=True))
         expected = '7.1.402.0'
         expectedMajor = 7
 
@@ -64,14 +59,14 @@ class Test_gamestream(unittest.TestCase):
         actual = server.get_server_version()
 
         # assert
-        self.assertEquals(expected, actual.getFullString())
-        self.assertEquals(expectedMajor, actual.getMajor()) 
+        self.assertEqual(expected, actual.getFullString())
+        self.assertEqual(expectedMajor, actual.getMajor()) 
       
     @patch('resources.lib.gamestream.net.get_URL_using_handler')
     def test_getting_apps_from_gamestream_server_gives_correct_amount(self, http_mock: MagicMock):
 
         # arrange        
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "\\gamestreamserver_apps.xml")
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_apps.xml")
         server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR))
 
         expected = 18
@@ -85,7 +80,7 @@ class Test_gamestream(unittest.TestCase):
                 print('{} = {}'.format(key, app[key]))
 
         # arranges
-        self.assertEquals(expected, len(actual))
+        self.assertEqual(expected, len(actual))
         
     @unittest.skip('only testable with actual server for now')
     @patch('resources.lib.gamestream.getCertificateBytes')
@@ -128,7 +123,7 @@ class Test_gamestream(unittest.TestCase):
                 print('{} = {}'.format(key, app[key]))
 
         # arranges
-        self.assertEquals(expected, len(actual))
+        self.assertEqual(expected, len(actual))
         
 
 if __name__ == '__main__':

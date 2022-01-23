@@ -2,7 +2,7 @@
 <addon id="script.akl.nvgamestream" name="Nvidia Gamestream plugin for AKL" version="0.0.1" provider-name="chrisism">
   <requires>
       <import addon="xbmc.python" version="3.0.0"/>
-      <import addon="script.module.akl" version="1.0.0"/>
+      <import addon="script.module.akl" version="1.0.3"/>
   </requires>
   <extension point="xbmc.python.script" library="default.py">
     <provides>game</provides>
@@ -16,7 +16,7 @@
     <platform>all</platform>
     <license>GNU General Public License version 2</license>
     <email>crizizz@gmail.com</email>
-    <forum>http://forum.kodi.tv/showthread.php?tid=287826</forum>
+    <forum>http://forum.kodi.tv/showthread.php?tid=366351</forum>
     <website>https://github.com/chrisism/script.akl.nvgamestream</website>
     <source>https://github.com/chrisism/script.akl.nvgamestream</source>
     <assets>

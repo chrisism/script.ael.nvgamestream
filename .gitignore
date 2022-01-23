@@ -131,4 +131,4 @@ dmypy.json
 .dist/
 node_modules/
 .vscode/
-.addon
+tests/output/
