@@ -50,7 +50,7 @@ class Test_gamestream(unittest.TestCase):
          
         # arrange
         http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16')
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR, debug_mode=True))
+        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
         expected = '7.1.402.0'
         expectedMajor = 7
 
@@ -110,7 +110,7 @@ class Test_gamestream(unittest.TestCase):
 
         # arrange        
        # http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "\\gamestreamserver_apps.xml")
-        server = GameStreamServer('192.168.0.5', io.FileName(self.TEST_ASSETS_DIR))
+        server = GameStreamServer('192.168.0.5', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
 
         expected = 18
 

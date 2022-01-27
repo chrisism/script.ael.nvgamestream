@@ -53,6 +53,4 @@ Execute the following command with OpenSSL:
 openssl pkcs8 -topk8 -inform DER -outform PEM -nocrypt -in <MOONLIGHT_KEY_FILE_PATH>.key -out <YOUR_FILE_NAME>.key
 ```
 
-Copy the new *.key and *.crt to a separate folder. Now you can use these certificate files when creating your launcher in AKL 
-in Kodi.
-
+Copy the new *.key and *.crt to a separate folder. Now you can use these certificate files when creating your launcher in AKL in Kodi.
