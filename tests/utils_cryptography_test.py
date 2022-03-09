@@ -14,7 +14,7 @@ logging.basicConfig(format = '%(asctime)s %(module)s %(levelname)s: %(message)s'
                 datefmt = '%m/%d/%Y %I:%M:%S %p', level = logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-from resources.lib.crypto import create_self_signed_cert, getCertificatePublicKey, HashAlgorithm
+from resources.lib.crypto import create_self_signed_cert, get_certificate_public_key, HashAlgorithm
 
 try:
     from OpenSSL import crypto, SSL
@@ -63,8 +63,8 @@ class Test_cryptography_test(unittest.TestCase):
 
         # act
         create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
-        certificate_data = cert_path.getFakeContent()
-        actual = getCertificatePublicKey(certificate_data)
+        certificate_data = cert_path.getFakeContent().encode('ascii')
+        actual = get_certificate_public_key(certificate_data)
 
         # assert
         self.assertIsNotNone(actual)

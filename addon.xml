@@ -2,7 +2,7 @@
 <addon id="script.akl.nvgamestream" name="Nvidia Gamestream plugin for AKL" version="0.0.1" provider-name="chrisism">
   <requires>
       <import addon="xbmc.python" version="3.0.0"/>
-      <import addon="script.module.akl" version="1.0.3"/>
+      <import addon="script.module.akl" version="1.0.4"/>
   </requires>
   <extension point="xbmc.python.script" library="default.py">
     <provides>game</provides>

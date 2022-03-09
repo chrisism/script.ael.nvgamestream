@@ -86,7 +86,7 @@ stages:
           RegEx: 'version="\d+\.\d+\.\d+.*" provider'
           ValueToReplace: 'version="$(addonVersion)" provider'
 
-      - bash: update_addon_news $(workingDirectory)/addon.xml $(workingDirectory)/changelog.txt
+      - bash: update_addon_news $(workingDirectory)/addon.xml $(workingDirectory)/changelog.md
         displayName: 'Add changelog in addon.xml'
         workingDirectory: '$(workingDirectory)'
 
@@ -172,7 +172,6 @@ stages:
           addChangeLog: true
           assets: |
             $(build.artifactstagingdirectory)/package/*.*
-            $(workingDirectory)/changelog.txt
 
 - stage: DeployStaging
   displayName: Deployment on Staging

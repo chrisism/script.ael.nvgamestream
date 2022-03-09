@@ -31,8 +31,8 @@ from akl.utils import kodi, io
 from akl.scanners import RomScannerStrategy, ROMCandidateABC
 
 # Local modules
-from gamestream import GameStreamServer
-import crypto
+from resources.lib.gamestream import GameStreamServer
+from resources.lib import crypto
 
 logger = logging.getLogger(__name__)
         
@@ -87,7 +87,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         logger.debug('NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{0}"'.format(crypto.UTILS_PYCRYPTO_AVAILABLE))
         
         info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates. '
-        info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi.'
+        info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi. '
         info_txt += 'Please read the wiki for details how to create them before you go further.'
 
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'certificates_path', 'Pairing with Gamestream PC',

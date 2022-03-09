@@ -51,6 +51,9 @@ try:
 except:
     UTILS_PYCRYPTO_AVAILABLE = False
     
+# --- AKL packages ---
+from akl.utils import io
+
 logger = logging.getLogger(__name__)
 
 # #################################################################################################
@@ -65,7 +68,7 @@ logger = logging.getLogger(__name__)
 # cert_file_path: the path to the .crt file of this certificate
 # key_file_paht: the path to the .key file of this certificate
 #
-def create_self_signed_cert(cert_name, cert_file_path, key_file_path):
+def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
     # create a key pair
     k = crypto.PKey()
     k.generate_key(crypto.TYPE_RSA, 2048)
@@ -90,17 +93,19 @@ def create_self_signed_cert(cert_name, cert_file_path, key_file_path):
 
     logger.debug('Creating certificate file {0}'.format(cert_file_path.getPath()))
     data = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-    cert_file_path.saveStrToFile(data, 'ascii')
+    data_str = data.decode('ascii')
+    cert_file_path.saveStrToFile(data_str, 'ascii')
 
     logger.debug('Creating certificate key file {0}'.format(key_file_path.getPath()))
     data = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
-    key_file_path.saveStrToFile(data, 'ascii')
+    data_str = data.decode('ascii')
+    key_file_path.saveStrToFile(data_str, 'ascii')
 
-def getCertificatePublicKeyBytes(certificate_data):
-    pk_data = getCertificatePublicKey(certificate_data)
+def get_certificate_public_key_bytes(certificate_data):
+    pk_data = get_certificate_public_key(certificate_data)
     return bytearray(pk_data)
 
-def getCertificatePublicKey(certificate_data):
+def get_certificate_public_key(certificate_data:bytes):
     cert = crypto.x509.load_pem_x509_certificate(certificate_data, default_backend())
     pk = cert.public_key()
     pk_data = pk.public_bytes(
@@ -109,12 +114,12 @@ def getCertificatePublicKey(certificate_data):
 
     return pk_data
 
-def getCertificateSignature(certificate_data):
+def get_certificate_signature(certificate_data):
     cert = crypto.x509.load_pem_x509_certificate(certificate_data, default_backend())
     return cert.signature
 
-def verify_signature(data, signature, certificate_data):
-    pk_data = getCertificatePublicKey(certificate_data)
+def verify_signature(data:bytes, signature:bytes, certificate_data:bytes):
+    pk_data = get_certificate_public_key(certificate_data)
     rsakey = RSA.importKey(pk_data) 
     signer = PKCS1_v1_5.new(rsakey) 
 
@@ -188,7 +193,7 @@ class AESCipher(object):
         encrypted = self.encrypt(raw)
         return binascii.hexlify(encrypted)
 
-    def decrypt(self, enc):
+    def decrypt(self, enc: bytearray):
         cipher = AES.new(self.key, AES.MODE_ECB)
-        decrypted = cipher.decrypt(str(enc))
+        decrypted = cipher.decrypt(enc)
         return decrypted

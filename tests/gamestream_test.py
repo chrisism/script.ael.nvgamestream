@@ -31,11 +31,16 @@ class Test_gamestream(unittest.TestCase):
         with open(path, 'r', encoding=encoding) as f:
             return f.read()
         
-    @patch('resources.lib.gamestream.net.get_URL_using_handler')
+    def read_ascii_file(self, path, encoding=None):
+        with open(path, 'r', encoding=encoding) as f:
+            data = f.read()
+            return data.encode(encoding)
+        
+    @patch('resources.lib.gamestream.net.get_URL')
     def test_connecting_to_a_gamestream_server(self, http_mock: MagicMock):
         
         # arrange
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16')
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16'), 200
         server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
         
         # act
@@ -45,11 +50,11 @@ class Test_gamestream(unittest.TestCase):
         self.assertTrue(actual)
 
 
-    @patch('resources.lib.gamestream.net.get_URL_using_handler')
+    @patch('resources.lib.gamestream.net.get_URL')
     def test_get_the_version_of_the_gamestream_server(self, http_mock: MagicMock):
          
         # arrange
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16')
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16'), 200
         server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
         expected = '7.1.402.0'
         expectedMajor = 7
@@ -62,11 +67,11 @@ class Test_gamestream(unittest.TestCase):
         self.assertEqual(expected, actual.getFullString())
         self.assertEqual(expectedMajor, actual.getMajor()) 
       
-    @patch('resources.lib.gamestream.net.get_URL_using_handler')
+    @patch('resources.lib.gamestream.net.get_URL')
     def test_getting_apps_from_gamestream_server_gives_correct_amount(self, http_mock: MagicMock):
 
         # arrange        
-        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_apps.xml")
+        http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_apps.xml"), 200
         server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR))
 
         expected = 18
@@ -83,18 +88,18 @@ class Test_gamestream(unittest.TestCase):
         self.assertEqual(expected, len(actual))
         
     @unittest.skip('only testable with actual server for now')
-    @patch('resources.lib.gamestream.getCertificateBytes')
-    @patch('resources.lib.gamestream.getCertificateKeyBytes')
+    @patch('resources.lib.gamestream.GameStreamServer.get_certificate_bytes')
+    @patch('resources.lib.gamestream.GameStreamServer.get_certificate_key_bytes')
     @patch('resources.lib.gamestream.crypto.randomBytes')
     def test_pair_with_gamestream_server(self, random_mock:MagicMock, certificateKeyBytesMock:MagicMock, certificateBytesMock:MagicMock):
         
         # arrange
-        addon_dir = io.FileName(self.TEST_ASSETS_DIR)
-        certificateBytesMock.return_value    = self.read_file(self.TEST_ASSETS_DIR + "/nvidia.crt")
-        certificateKeyBytesMock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/nvidia.key")
+        addon_dir = io.FileName(f"{self.TEST_ASSETS_DIR}/certs/")
+        certificateBytesMock.return_value    = self.read_ascii_file(f"{self.TEST_ASSETS_DIR}/certs/nvidia.crt", encoding="ascii")
+        certificateKeyBytesMock.return_value = self.read_ascii_file(f"{self.TEST_ASSETS_DIR}/certs/nvidia.key", encoding="ascii")
         random_mock.return_value = binascii.unhexlify("50ca25d03b4ac53368875b9a1bfb50cc")
 
-        server = GameStreamServer('mediaserver', addon_dir, debug_mode = True)
+        server = GameStreamServer('192.168.0.5', addon_dir, debug_mode = True)
         
         # act
         server.connect()

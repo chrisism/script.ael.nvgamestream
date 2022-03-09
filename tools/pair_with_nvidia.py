@@ -12,54 +12,57 @@
 # pair up with that computer and generate certificates needed to keep on communicating with
 # the geforce experience computer. These certificates can be used in a Gamestream Launcher.
 #
-# pip install pycrypto
-# or pip install pycryptodome
-# pip install cryptographic
-# pip install pyopenssl
+# pip install -r requirements
 #
 #from __future__ import unicode_literals
 import sys, os
-import logging
-
 # AKL main imports
-from akl.utils import kodilogging, io
+from akl.utils import io
 
 # Local modules
 from resources.lib.gamestream import GameStreamServer
 
-kodilogging.config() 
-logger = logging.getLogger(__name__)
+def pair(host:str, path:str):
 
-if __name__ == "__main__":
-   root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-   sys.path.append(root)
+    certs_path = io.FileName(path)
+    print(f"Going to connect with '{host}'")
 
-host = sys.argv[1]
-path = sys.argv[2]
+    server = GameStreamServer(host, certs_path)
+    succeeded = False
+    try:
+        succeeded = server.connect()
+    except:
+        print("Error")
 
-certs_path = io.FileName(path)
-print("Going to connect with '{}'".format(host))
+    if not succeeded:
+        print(f"Connection to {host} failed")
+        exit
 
-server = GameStreamServer(host, certs_path)
-succeeded = server.connect()
+    print(f"Connection to {host} succeeded")
 
-if not succeeded:
-    print('Connection to {} failed'.format(host))
-    exit
+    if server.is_paired():
+        print(f"Already paired with host {host}. Stopping pairing process")
+        exit
 
-print('Connection to {} succeeded'.format(host))
+    pincode = server.generatePincode()
 
-if server.is_paired():
-    print('Already paired with host {}. Stopping pairing process'.format(host))
-    exit
+    print("Start pairing process")
+    print(f"Open up the Gamestream server and when asked insert the following PIN code: {pincode}")
+    paired = server.pairServer(pincode)
 
-pincode = server.generatePincode()
+    if not paired:
+        print(f"Pairing with {host} failed")
+    else:
+        print(f"Pairing with {host} succeeded")
 
-print('Start pairing process')
-print('Open up the Gamestream server and when asked insert the following PIN code: {}'.format(pincode))
-paired = server.pairServer(pincode)
+def main():
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.append(root)
 
-if not paired:
-    print('Pairing with {} failed'.format(host))
-else:
-    print('Pairing with {} succeeded'.format(host))
+    host = sys.argv[1]
+    path = sys.argv[2]
+
+    pair(host, path)
+
+if __name__ == '__main__':
+    main()

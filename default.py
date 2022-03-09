@@ -70,7 +70,7 @@ def run_plugin():
     else:
         kodi.dialog_OK(text=parser.format_help())
     
-    logger.debug('Advanced Kodi Launcher Plugin: Steam Library -> exit')
+    logger.debug('Advanced Kodi Launcher Plugin: Nvidia Gamestream -> exit')
 
 # ---------------------------------------------------------------------------------------------
 # Launcher methods.

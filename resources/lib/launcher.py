@@ -28,8 +28,8 @@ from akl.utils import kodi, io, text
 from akl.launchers import LauncherABC
 
 # Local modules
-from gamestream import GameStreamServer
-import crypto
+from resources.lib.gamestream import GameStreamServer
+from resources.lib import crypto
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,8 @@ class NvidiaGameStreamLauncher(LauncherABC):
         # wizard = WizardDialog_Dummy(wizard, 'pincode', None, _builder_generatePairPinCode)
         wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
             self._builder_try_to_resolve_path_to_nvidia_certificates)
-        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select the path with valid certificates', 
+        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 
+            'Select the path with valid certificates', 
             0, '', self._builder_validate_nvidia_certificates) 
         
         return wizard
@@ -127,7 +128,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         return certificates_path.getPath()
     
     def _builder_validate_gamestream_server_connection(self, input, item_key, launcher):
-        gs = GameStreamServer(input, None)
+        gs = GameStreamServer(input, None, debug_mode=True)
         if not gs.connect():
             kodi.notify_warn('Could not connect to gamestream server')
             return input
@@ -148,10 +149,10 @@ class NvidiaGameStreamLauncher(LauncherABC):
             streamClient = 'Moonlight'
 
         options = collections.OrderedDict()
-        options[self._change_application]   = "Change Application: '{0}'".format(streamClient)
-        options[self._change_server_id]     = "Change server ID: '{}'".format(self.get_server_id())
-        options[self._change_server_host]   = "Change host: '{}'".format(self.launcher_settings['server'])
-        options[self._change_certificates]  = "Change certificates: '{}'".format(self.get_certificates_path().getPath())
+        options[self._change_application]   = f"Change Application: '{streamClient}'"
+        options[self._change_server_id]     = f"Change server ID: '{self.get_server_id()}'"
+        options[self._change_server_host]   = f"Change host: '{self.launcher_settings['server']}'"
+        options[self._change_certificates]  = f"Change certificates: '{self.get_certificates_path().getPath()}'"
         options[self._update_server_info]   = "Update server info"
         return options
     
