@@ -401,6 +401,10 @@ class GameStreamServer(object):
 
         return True
 
+    def create_certificates(self):
+        logger.info('Creating self signed client certificate')
+        crypto.create_self_signed_cert("NVIDIA GameStream Client", self.certificate_file_path, self.certificate_key_file_path)
+
     @staticmethod
     def try_to_resolve_path_to_nvidia_certificates():
         home = expanduser("~")

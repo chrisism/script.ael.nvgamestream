@@ -90,50 +90,72 @@ class NvidiaStreamScanner(RomScannerStrategy):
         info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi. '
         info_txt += 'Please read the wiki for details how to create them before you go further.'
 
-        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'certificates_path', 'Pairing with Gamestream PC',
-            info_txt)
+        #wizard = kodi.WizardDialog_FormattedMessage(wizard, 'certificates_path', 'Pairing with Gamestream PC',
+        #    info_txt)
         wizard = kodi.WizardDialog_Input(wizard, 'server', 'Gamestream Server',
             xbmcgui.INPUT_IPADDRESS, self._builder_validate_gamestream_server_connection)
         # Pairing with pin code will be postponed untill crypto and certificate support in kodi
-        # wizard = WizardDialog_Dummy(wizard, 'pincode', None, _builder_generatePairPinCode)
+        wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, self._builder_generate_pair_pincode)
         wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
             self._builder_try_to_resolve_path_to_nvidia_certificates)
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select the path with valid certificates', 
             0, '', self._builder_validate_nvidia_certificates) 
+        
+        info_txt = f'Pairing with GameStream PC. If requested on the remote PC enter pincode'
+        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'pincode', 'Pairing with Gamestream PC',
+            info_txt, self._builder_pair_with_server)
         
         return wizard
       
     def _configure_post_wizard_hook(self):
         return True
     
-    def _builder_try_to_resolve_path_to_nvidia_certificates(self, input, item_key, launcher):
+    def _builder_try_to_resolve_path_to_nvidia_certificates(self, input, item_key, properties):
         path = GameStreamServer.try_to_resolve_path_to_nvidia_certificates()
         return path
 
-    def _builder_validate_nvidia_certificates(self, input, item_key, launcher):
+    def _builder_validate_nvidia_certificates(self, input, item_key, properties):
         certificates_path = io.FileName(input)
         gs = GameStreamServer(input, certificates_path)
         if not gs.validate_certificates():
+            #kodi.notify_warn(
+            #    'Could not find certificates to validate. Make sure you already paired with '
+            #    'the server with the Shield or Moonlight applications.')
             kodi.notify_warn(
-                'Could not find certificates to validate. Make sure you already paired with '
-                'the server with the Shield or Moonlight applications.')
+                'Could not find certificates to validate. Creating certificates')
+            gs.create_certificates()
 
         return certificates_path.getPath()
     
-    def _builder_validate_gamestream_server_connection(self, input, item_key, launcher):
+    def _builder_validate_gamestream_server_connection(self, input, item_key, properties):
         gs = GameStreamServer(input, None)
         if not gs.connect():
             kodi.notify_warn('Could not connect to gamestream server')
             return input
 
-        launcher['server_id'] = 4 # not yet known what the origin is
-        launcher['server_uuid'] = gs.get_uniqueid()
-        launcher['server_hostname'] = gs.get_hostname()
+        properties['server_id'] = 4 # not yet known what the origin is
+        properties['server_uuid'] = gs.get_uniqueid()
+        properties['server_hostname'] = gs.get_hostname()
 
-        logger.debug('validate_gamestream_server_connection() Found correct gamestream server with id "{}" and hostname "{}"'.format(launcher['server_uuid'],launcher['server_hostname']))
-
+        logger.debug(f'Found correct gamestream server with id "{properties["server_uuid"]}" and hostname "{properties["server_hostname"]}"')
         return input
     
+    def _builder_generate_pair_pincode(self, input, item_key, properties):
+        return GameStreamServer(None, None).generatePincode()
+
+    def _builder_pair_with_server(self, input, item_key, properties):
+        certificates_path = io.FileName(properties['certificates_path'])
+        pincode = properties[item_key]
+        server = GameStreamServer(
+            properties['server'], 
+            certificates_path, 
+            debug_mode = True)
+        
+        server.connect()
+        paired = server.pairServer(pincode)
+
+        logger.info(f"PAIRED {paired}")
+
     def _configure_get_edit_options(self) -> dict:
 
         options = collections.OrderedDict()
@@ -162,9 +184,9 @@ class NvidiaStreamScanner(RomScannerStrategy):
         self._builder_validate_gamestream_server_connection(self.scanner_settings['server'],'server', self.scanner_settings)
             
     # ~~~ Scan for new files (*.*) and put them in a list ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    def _getCandidates(self, launcher_report: report.Reporter) -> typing.List[ROMCandidateABC]:
+    def _getCandidates(self, scanner_report: report.Reporter) -> typing.List[ROMCandidateABC]:
         self.progress_dialog.startProgress('Reading Nvidia GameStream server...')
-        launcher_report.write('Reading Nvidia GameStream server')
+        scanner_report.write('Reading Nvidia GameStream server')
      
         server_host         = self.get_server()
         certificates_path   = self.get_certificates_path()
@@ -181,7 +203,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         
         self.progress_dialog.updateProgress(80)
         num_games = len(games)
-        launcher_report.write('Gamestream scanner found {} games'.format(num_games))
+        scanner_report.write('Gamestream scanner found {} games'.format(num_games))
         
         self.progress_dialog.endProgress()
         return [*(GameStreamCandidate(g) for g in games)]
@@ -220,14 +242,14 @@ class NvidiaStreamScanner(RomScannerStrategy):
     def _processFoundItems(self, 
                            candidates: typing.List[ROMCandidateABC], 
                            roms:typing.List[api.ROMObj],
-                           launcher_report: report.Reporter) -> typing.List[api.ROMObj]:
+                           scanner_report: report.Reporter) -> typing.List[api.ROMObj]:
 
         num_items = len(candidates)    
         new_roms:typing.List[api.ROMObj] = []
 
         self.progress_dialog.startProgress('Scanning found items', num_items)
         logger.debug('============================== Processing Gamestream Games ==============================')
-        launcher_report.write('Processing games ...')
+        scanner_report.write('Processing games ...')
         num_items_checked = 0
         
         streamIdsAlreadyInCollection = set(rom.get_scanned_data_element('gstreamid') for rom in roms)
@@ -246,8 +268,8 @@ class NvidiaStreamScanner(RomScannerStrategy):
                 continue
             
             logger.debug('========== Processing GameStream game ==========')
-            launcher_report.write('>>> title: {}'.format(stream_candidate.get_name()))
-            launcher_report.write('>>> ID: {}'.format(stream_candidate.get_game_id()))
+            scanner_report.write('>>> title: {}'.format(stream_candidate.get_name()))
+            scanner_report.write('>>> ID: {}'.format(stream_candidate.get_game_id()))
         
             logger.debug('Not found. Item {} is new'.format(stream_candidate.get_name()))
 

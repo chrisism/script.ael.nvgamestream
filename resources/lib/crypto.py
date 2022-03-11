@@ -23,13 +23,10 @@ import binascii
 from datetime import timedelta
 from datetime import datetime
 
-from base64 import b64decode
-from base64 import b64encode
-
 # NOTE OpenSSL library will be included in Kodi M****
 #      Search documentation about this in Garbear's github repo.
 try:
-    from OpenSSL import crypto, SSL
+    from OpenSSL import crypto
     UTILS_OPENSSL_AVAILABLE = True
 except:
     UTILS_OPENSSL_AVAILABLE = False
@@ -68,7 +65,56 @@ logger = logging.getLogger(__name__)
 # cert_file_path: the path to the .crt file of this certificate
 # key_file_paht: the path to the .key file of this certificate
 #
+
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+
 def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    
+    now    = datetime.utcnow()
+    expire = now + timedelta(days=365)
+
+    subject = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, u"GL"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, u"GL"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, u"KODI"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, u"AKL"),
+        x509.NameAttribute(NameOID.COMMON_NAME, cert_name)
+    ])
+    issuer = subject
+        
+    cert_builder = x509.CertificateBuilder()
+    cert_builder = cert_builder.subject_name(subject)
+    cert_builder = cert_builder.issuer_name(issuer)
+    cert_builder = cert_builder.public_key(key.public_key())
+    cert_builder = cert_builder.serial_number(x509.random_serial_number())
+    cert_builder = cert_builder.not_valid_before(now)
+    cert_builder = cert_builder.not_valid_after(expire)
+    cert_builder = cert_builder.add_extension(x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),critical=False)
+    
+    # Sign our certificate with our private key
+    cert = cert_builder.sign(key, hashes.SHA1())
+
+    logger.debug('Creating certificate file {0}'.format(cert_file_path.getPath()))
+    data = cert.public_bytes(serialization.Encoding.PEM)
+    data_str = data.decode('ascii')
+    cert_file_path.saveStrToFile(data_str, 'ascii')
+
+    logger.debug('Creating certificate key file {0}'.format(key_file_path.getPath()))
+    data = key.private_bytes(
+        serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption)
+
+    data_str = data.decode('ascii')
+    key_file_path.saveStrToFile(data_str, 'ascii')
+
+def create_self_signed_cert_old(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
+
     # create a key pair
     k = crypto.PKey()
     k.generate_key(crypto.TYPE_RSA, 2048)
