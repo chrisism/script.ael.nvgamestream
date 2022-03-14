@@ -25,15 +25,14 @@ from datetime import datetime
 
 # NOTE OpenSSL library will be included in Kodi M****
 #      Search documentation about this in Garbear's github repo.
-try:
-    from OpenSSL import crypto
-    UTILS_OPENSSL_AVAILABLE = True
-except:
-    UTILS_OPENSSL_AVAILABLE = False
 
 try:
-    from cryptography.hazmat.backends import default_backend
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
     from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
     UTILS_CRYPTOGRAPHY_AVAILABLE = True
 except:
     UTILS_CRYPTOGRAPHY_AVAILABLE = False
@@ -65,15 +64,8 @@ logger = logging.getLogger(__name__)
 # cert_file_path: the path to the .crt file of this certificate
 # key_file_paht: the path to the .key file of this certificate
 #
-
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import hashes
-from cryptography import x509
-from cryptography.x509.oid import NameOID
-
 def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
-    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
     
     now    = datetime.utcnow()
     expire = now + timedelta(days=365)
@@ -97,62 +89,28 @@ def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path
     cert_builder = cert_builder.add_extension(x509.SubjectAlternativeName([x509.DNSName(u"localhost")]),critical=False)
     
     # Sign our certificate with our private key
-    cert = cert_builder.sign(key, hashes.SHA1())
+    cert = cert_builder.sign(key, hashes.SHA1(), default_backend())
 
     logger.debug('Creating certificate file {0}'.format(cert_file_path.getPath()))
     data = cert.public_bytes(serialization.Encoding.PEM)
     data_str = data.decode('ascii')
-    cert_file_path.saveStrToFile(data_str, 'ascii')
+    cert_file_path.saveStrToFile(data_str, encoding='ascii')
 
     logger.debug('Creating certificate key file {0}'.format(key_file_path.getPath()))
     data = key.private_bytes(
         serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption)
+        encryption_algorithm=serialization.NoEncryption())
 
     data_str = data.decode('ascii')
-    key_file_path.saveStrToFile(data_str, 'ascii')
-
-def create_self_signed_cert_old(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
-
-    # create a key pair
-    k = crypto.PKey()
-    k.generate_key(crypto.TYPE_RSA, 2048)
-
-    now    = datetime.now()
-    expire = now + timedelta(days=365)
-
-    # create a self-signed cert
-    cert = crypto.X509()
-    cert.get_subject().C = "GL"
-    cert.get_subject().ST = "GL"
-    cert.get_subject().L = "Kodi"
-    cert.get_subject().O = "akl"
-    cert.get_subject().OU = "akl"
-    cert.get_subject().CN = cert_name
-    cert.set_serial_number(1000)
-    cert.set_notBefore(now.strftime("%Y%m%d%H%M%SZ").encode())
-    cert.set_notAfter(expire.strftime("%Y%m%d%H%M%SZ").encode())
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(k)
-    cert.sign(k, str('sha1'))
-
-    logger.debug('Creating certificate file {0}'.format(cert_file_path.getPath()))
-    data = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
-    data_str = data.decode('ascii')
-    cert_file_path.saveStrToFile(data_str, 'ascii')
-
-    logger.debug('Creating certificate key file {0}'.format(key_file_path.getPath()))
-    data = crypto.dump_privatekey(crypto.FILETYPE_PEM, k)
-    data_str = data.decode('ascii')
-    key_file_path.saveStrToFile(data_str, 'ascii')
+    key_file_path.saveStrToFile(data_str, encoding='ascii')
 
 def get_certificate_public_key_bytes(certificate_data):
     pk_data = get_certificate_public_key(certificate_data)
     return bytearray(pk_data)
 
 def get_certificate_public_key(certificate_data:bytes):
-    cert = crypto.x509.load_pem_x509_certificate(certificate_data, default_backend())
+    cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
     pk = cert.public_key()
     pk_data = pk.public_bytes(
         encoding=serialization.Encoding.PEM,
@@ -161,7 +119,7 @@ def get_certificate_public_key(certificate_data:bytes):
     return pk_data
 
 def get_certificate_signature(certificate_data):
-    cert = crypto.x509.load_pem_x509_certificate(certificate_data, default_backend())
+    cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
     return cert.signature
 
 def verify_signature(data:bytes, signature:bytes, certificate_data:bytes):
