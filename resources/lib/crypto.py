@@ -26,27 +26,19 @@ from datetime import datetime
 # NOTE OpenSSL library will be included in Kodi M****
 #      Search documentation about this in Garbear's github repo.
 
-try:
-    from cryptography import x509
-    from cryptography.x509.oid import NameOID
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric import rsa
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.backends import default_backend
-    UTILS_CRYPTOGRAPHY_AVAILABLE = True
-except:
-    UTILS_CRYPTOGRAPHY_AVAILABLE = False
+from cryptography import x509
+from cryptography.x509.oid import NameOID
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
 
-try:
-    from Crypto.PublicKey import RSA
-    from Crypto.Signature import PKCS1_v1_5
-    from Crypto.Hash import SHA256
-    from Crypto.Cipher import AES
-    from Crypto.Random import get_random_bytes
-    UTILS_PYCRYPTO_AVAILABLE = True
-except:
-    UTILS_PYCRYPTO_AVAILABLE = False
-    
+from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
+from Crypto.Random import get_random_bytes
+
 # --- AKL packages ---
 from akl.utils import io
 

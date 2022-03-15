@@ -80,12 +80,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         if path: return io.FileName(path)
         return None
     
-    def _configure_get_wizard(self, wizard) -> kodi.WizardDialog: 
-          #UTILS_OPENSSL_AVAILABLE
-        logger.debug('NvidiaStreamScanner::_configure_get_wizard() SSL: "{0}"'.format(crypto.UTILS_OPENSSL_AVAILABLE))
-        logger.debug('NvidiaStreamScanner::_configure_get_wizard() Crypto: "{0}"'.format(crypto.UTILS_CRYPTOGRAPHY_AVAILABLE))
-        logger.debug('NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{0}"'.format(crypto.UTILS_PYCRYPTO_AVAILABLE))
-        
+    def _configure_get_wizard(self, wizard) -> kodi.WizardDialog:
         info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates. '
         info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi. '
         info_txt += 'Please read the wiki for details how to create them before you go further.'
