@@ -3,8 +3,9 @@
   <requires>
       <import addon="xbmc.python" version="3.0.0"/>
       <import addon="script.module.akl" version="1.0.4"/>
-      <import addon="script.module.cryptography.android" version="36.0.3"/>
-      <import addon="script.module.pycryptodome" version="3.4.3" />
+      <import addon="script.module.cryptography.all" version="36.0.3" optional="true"/>
+      <import addon="script.module.cryptography.android" version="36.0.3" optional="true"/>
+      <import addon="script.module.pycryptodome" version="3.14.1"/>
   </requires>
   <extension point="xbmc.python.script" library="default.py">
     <provides>game</provides>
