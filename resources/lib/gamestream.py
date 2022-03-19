@@ -84,12 +84,7 @@ class GameStreamServer(object):
         
         if http_code != 200 or page_data is None:
             return None   
-
-
-        n = datetime.now().timestamp()
-        with open(f'/home/cwjungerius/projects/kodi/script.akl.nvgamestream/tests/output/res_{n}.txt', 'w') as f:
-            f.write(page_data)
-
+            
         try:
             root = ET.fromstring(page_data)
             if self.debug_mode:
