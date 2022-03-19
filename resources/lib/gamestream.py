@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 from __future__ import division
 
+from datetime import datetime
 import logging
 
 from os.path import expanduser
@@ -83,6 +84,11 @@ class GameStreamServer(object):
         
         if http_code != 200 or page_data is None:
             return None   
+
+
+        n = datetime.now().timestamp()
+        with open(f'/home/cwjungerius/projects/kodi/script.akl.nvgamestream/tests/output/res_{n}.txt', 'w') as f:
+            f.write(page_data)
 
         try:
             root = ET.fromstring(page_data)
@@ -175,6 +181,8 @@ class GameStreamServer(object):
         # Create an AES key from them
         aes_cypher = crypto.AESCipher(saltAndPin, hashAlgorithm)
 
+        salt_str = salt.decode()
+
         # get certificates ready
         logger.debug('Getting local certificate files')
         client_certificate      = self.get_certificate_bytes()
@@ -227,7 +235,7 @@ class GameStreamServer(object):
             return False
 
         # Decode the server's response and subsequent challenge
-        logger.debug('Decoding server\'s response and challenge response')
+        logger.debug("Decoding server's response and challenge response")
         server_challenge_hex        = pairing_challenge_result.find('challengeresponse').text
         server_challenge_bytes      = bytearray.fromhex(server_challenge_hex)
         server_challenge_decrypted  = aes_cypher.decrypt(server_challenge_bytes)
@@ -235,8 +243,9 @@ class GameStreamServer(object):
         server_challenge_firstbytes = server_challenge_decrypted[:hashAlgorithm.digest_size()]
         server_challenge_lastbytes  = server_challenge_decrypted[hashAlgorithm.digest_size():hashAlgorithm.digest_size()+16]
 
-        # Using another 16 bytes secret, compute a challenge response hash using the secret, our cert sig, and the challenge
+        # Using another 16 bytes secret, compute a challenge response hash using the secret, 
         client_secret               = crypto.randomBytes(16)
+        # our cert sig, and the challenge
         challenge_response          = server_challenge_lastbytes + certificate_signature + client_secret
         challenge_response_hashed   = hashAlgorithm.hash(challenge_response)
         challenge_response_encrypted= aes_cypher.encryptToHex(challenge_response_hashed)
@@ -347,7 +356,10 @@ class GameStreamServer(object):
 
         if not self.certificate_file_path.exists():
             logger.info('Client certificate file does not exist. Creating')
-            crypto.create_self_signed_cert("NVIDIA GameStream Client", self.certificate_file_path, self.certificate_key_file_path)
+            try:
+                crypto.create_self_signed_cert("NVIDIA GameStream Client", self.certificate_file_path, self.certificate_key_file_path)
+            except:
+                logger.exception('Cannot create certificate')
 
         logger.info(f'Loading client certificate data from {self.certificate_file_path.getPath()}')
 

@@ -5,6 +5,7 @@ from tests.fakes import FakeFile
 
 from akl.utils import io
 import resources.lib.crypto as target
+
 class Test_cryptography_test(unittest.TestCase):
     
     ROOT_DIR = ''
@@ -35,6 +36,39 @@ class Test_cryptography_test(unittest.TestCase):
         # assert
         self.assertIsNotNone(actual)
 
+    def test_get_signature_key_from_certificate(self):
+        
+        # arrange
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
+        key_path = FakeFile(test_dir + '/nv_client_test.key')
+
+        # act
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
+        certificate_data = cert_path.getFakeContent().encode('ascii')
+        actual = target.get_certificate_signature(certificate_data)
+
+        # assert
+        self.assertIsNotNone(actual)
+
+    def test_decrypt_cert(self):
+
+        # arrange
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
+        key_path = FakeFile(test_dir + '/nv_client_test.key')
+
+        # act
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
+        certificate_data = cert_path.getFakeContent().encode('ascii')
+        certificate_key = key_path.getFakeContent().encode('ascii')
+
+        data = target.get_certificate_public_key(certificate_data)
+        target.AESCipher
+
+        # arrange
+
+
     def test_create_certificates(self):
         # arrange
         output_dir = io.FileName(self.TEST_OUTPUT_DIR, isdir=True)
@@ -43,8 +77,8 @@ class Test_cryptography_test(unittest.TestCase):
         key_file_path = output_dir.pjoin('nvidia_02.key')
         
         # act
-        target.create_self_signed_cert(cert_name, cert_file_path, key_file_path)
 
+        target.create_self_signed_cert(cert_name, cert_file_path, key_file_path)
         # assert
         assert cert_file_path.exists()
         assert key_file_path.exists()

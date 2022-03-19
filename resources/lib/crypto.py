@@ -37,10 +37,17 @@ except:
     UTILS_CRYPTOGRAPHY_AVAILABLE = False
 
 try:
+    from OpenSSL import crypto, SSL
+    UTILS_OPENSSL_AVAILABLE = True
+except:
+    UTILS_OPENSSL_AVAILABLE = False
+
+
+try:
     from Cryptodome.PublicKey import RSA
     from Cryptodome.Signature import PKCS1_v1_5
     from Cryptodome.Hash import SHA256
-    from Cryptodome.Cipher import AES
+    from Cryptodome.Cipher import AES, PKCS1_v1_5 as PKCS_cipher
     from Cryptodome.Random import get_random_bytes
     UTILS_PYCRYPTO_AVAILABLE = True
 except:
@@ -63,7 +70,46 @@ logger = logging.getLogger(__name__)
 # cert_file_path: the path to the .crt file of this certificate
 # key_file_paht: the path to the .key file of this certificate
 #
-def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName):
+def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName) -> bool:
+    if UTILS_CRYPTOGRAPHY_AVAILABLE:
+        return create_self_signed_cert_with_cryptolib(cert_name, cert_file_path, key_file_path)
+    
+    if UTILS_OPENSSL_AVAILABLE:
+        return create_self_signed_cert_with_openssl(cert_name, cert_file_path, key_file_path)
+
+    return False
+
+def create_self_signed_cert_with_openssl(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName) -> bool:
+        # create a key pair    
+        key = crypto.PKey()
+        key.generate_key(crypto.TYPE_RSA, 2048)
+
+        # create a self-signed cert
+        cert = crypto.X509()
+        cert.get_subject().C = "GL"
+        cert.get_subject().ST = "GL"
+        cert.get_subject().L = "KODI"
+        cert.get_subject().O = "my company"
+        cert.get_subject().OU = "AKL"
+        cert.get_subject().CN = cert_name
+        cert.gmtime_adj_notBefore(0)
+        cert.gmtime_adj_notAfter(10*365*24*60*60)
+        cert.set_issuer(cert.get_subject())
+        cert.set_pubkey(key)
+        cert.sign(key, 'sha1')
+
+        cert_data = crypto.dump_certificate(crypto.FILETYPE_PEM, cert)
+        cert_file_path.open(flags='wb')
+        cert_file_path.write(cert_data)
+        cert_file_path.close()
+
+        key_data  = crypto.dump_certificate(crypto.FILETYPE_PEM, key)
+        key_file_path.open(flags='wb')
+        key_file_path.write(key_data)
+        key_file_path.close()
+        return True
+
+def create_self_signed_cert_with_cryptolib(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName) -> bool:
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
     
     now    = datetime.utcnow()
@@ -103,29 +149,29 @@ def create_self_signed_cert(cert_name, cert_file_path:io.FileName, key_file_path
 
     data_str = data.decode('ascii')
     key_file_path.saveStrToFile(data_str, encoding='ascii')
-
-def get_certificate_public_key_bytes(certificate_data):
-    pk_data = get_certificate_public_key(certificate_data)
-    return bytearray(pk_data)
+    return True
 
 def get_certificate_public_key(certificate_data:bytes):
-    cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
-    pk = cert.public_key()
-    pk_data = pk.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo)
+    rsa_key = RSA.importKey(certificate_data) 
+    pub_key = rsa_key.publickey()
+    pk_data = pub_key.export_key()
 
     return pk_data
 
-def get_certificate_signature(certificate_data):
-    cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
-    return cert.signature
+def get_certificate_signature(certificate_data:bytes) -> bytes:
+    #cert = x509.load_pem_x509_certificate(certificate_data, default_backend())
+    #return cert.signature
+    cert_data_str   = certificate_data.decode()
+    pure_data_in_b64 = "".join([bit for bit in cert_data_str.split() if "---" not in bit])
+    pure_certificate_data = binascii.a2b_base64(pure_data_in_b64)
+    signature = pure_certificate_data[606:(606+256)]
+    return signature
 
 def verify_signature(data:bytes, signature:bytes, certificate_data:bytes):
     pk_data = get_certificate_public_key(certificate_data)
     rsakey = RSA.importKey(pk_data) 
     signer = PKCS1_v1_5.new(rsakey) 
-
+    
     digest = SHA256.new() 
     digest.update(data)
 
