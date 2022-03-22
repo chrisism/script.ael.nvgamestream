@@ -1,11 +1,15 @@
 import unittest, os
 import unittest.mock
+from unittest.mock import patch
 
 from tests.fakes import FakeFile
 
 from akl.utils import io
 import resources.lib.crypto as target
 
+from Crypto.Util.asn1 import DerSequence
+from binascii import a2b_base64
+import binascii
 class Test_cryptography_test(unittest.TestCase):
     
     ROOT_DIR = ''
@@ -20,8 +24,9 @@ class Test_cryptography_test(unittest.TestCase):
         cls.TEST_ASSETS_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'assets/'))
         cls.TEST_OUTPUT_DIR = os.path.abspath(os.path.join(cls.TEST_DIR,'output/'))
         if not os.path.exists(cls.TEST_OUTPUT_DIR): os.makedirs(cls.TEST_OUTPUT_DIR)
-        
-    def test_get_public_key_from_certificate(self):
+     
+    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))   
+    def test_get_public_key_from_certificate(self, addondir):
         
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,47 +34,53 @@ class Test_cryptography_test(unittest.TestCase):
         key_path = FakeFile(test_dir + '/nv_client_test.key')
 
         # act
-        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
+            create_type=target.CREATE_WITH_CRYPTOLIB)
         certificate_data = cert_path.getFakeContent().encode('ascii')
         actual = target.get_certificate_public_key(certificate_data)
 
         # assert
         self.assertIsNotNone(actual)
 
-    def test_get_signature_key_from_certificate(self):
+    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
+    def test_get_signature_key_from_certificate(self, addondir):
         
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
-        key_path = FakeFile(test_dir + '/nv_client_test.key')
+        cert_path = io.FileName(test_dir + '/nv_client_test.crt')
+        key_path = io.FileName(test_dir + '/nv_client_test.key')
 
         # act
-        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
-        certificate_data = cert_path.getFakeContent().encode('ascii')
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
+            create_type=target.CREATE_WITH_CRYPTOLIB) 
+            #create_type=target.CREATE_WITH_DOME)
+        certificate_data:str = cert_path.loadFileToStr(encoding='ascii')
+        certificate_data = certificate_data.encode('ascii') #getFakeContent().encode('ascii')
         actual = target.get_certificate_signature(certificate_data)
 
         # assert
         self.assertIsNotNone(actual)
 
-    def test_decrypt_cert(self):
-
+    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
+    def test_decrypt_cert(self, addondir):
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
         cert_path = FakeFile(test_dir + '/nv_client_test.crt')
         key_path = FakeFile(test_dir + '/nv_client_test.key')
 
         # act
-        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path)
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
+            create_type=target.CREATE_WITH_CRYPTOLIB)
         certificate_data = cert_path.getFakeContent().encode('ascii')
         certificate_key = key_path.getFakeContent().encode('ascii')
 
         data = target.get_certificate_public_key(certificate_data)
-        target.AESCipher
+        # target.AESCipher
 
         # arrange
 
-
-    def test_create_certificates(self):
+    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
+    def test_create_certificates(self, get_addon):
         # arrange
         output_dir = io.FileName(self.TEST_OUTPUT_DIR, isdir=True)
         cert_name = "NVIDIA GameStream Client"
@@ -78,7 +89,8 @@ class Test_cryptography_test(unittest.TestCase):
         
         # act
 
-        target.create_self_signed_cert(cert_name, cert_file_path, key_file_path)
+        target.create_self_signed_cert(cert_name, cert_file_path, key_file_path, 
+            create_type=target.CREATE_WITH_CRYPTOLIB)
         # assert
         assert cert_file_path.exists()
         assert key_file_path.exists()
@@ -122,5 +134,31 @@ class Test_cryptography_test(unittest.TestCase):
         #encoded = b64encode(file_contents)
         #print(encoded)
 
+    @unittest.skip('proofofconcept')
+    def test_read_cert(self):
+        priv = io.FileName('/nv_client_test.key')
+        crt = io.FileName('/nv_client_test.crt')
+        with open(priv.getPath(), 'r', encoding='ascii') as f:
+            priv_data = f.read()
+
+        with open(crt.getPath(), 'r', encoding='ascii') as f:
+            cert_data = f.read()
+        
+        lines = cert_data.replace(" ",'').split()
+        der = a2b_base64(''.join(lines[1:-1]))
+
+        # Extract subjectPublicKeyInfo field from X.509 certificate (see RFC3280)
+        cert = DerSequence()
+        cert.decode(der)
+        tbsCertificate = DerSequence()
+        tbsCertificate.decode(cert[0])
+        for x in cert:
+            y = binascii.b2a_base64(x)
+            z = y is None
+        for a in tbsCertificate:
+            b = a
+            z = b is None
+        subjectPublicKeyInfo = tbsCertificate[6]
+        
 if __name__ == '__main__':
     unittest.main()

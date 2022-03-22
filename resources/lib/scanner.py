@@ -20,6 +20,7 @@ from __future__ import division
 import logging
 import typing
 import collections
+import asyncio
 
 # --- Kodi packages --
 import xbmcgui
@@ -85,48 +86,108 @@ class NvidiaStreamScanner(RomScannerStrategy):
         logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
         logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
-        info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates. '
-        info_txt += 'Unfortunately at this moment we cannot create these certificates directly from within Kodi. '
-        info_txt += 'Please read the wiki for details how to create them before you go further.'
+        info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
+        info_txt += 'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '
+        info_txt += 'You can always create them manually with external tools/websites.\n'
+        info_txt += 'Please read the documentation or wiki for details how to create them if needed.'
 
-        #wizard = kodi.WizardDialog_FormattedMessage(wizard, 'certificates_path', 'Pairing with Gamestream PC',
-        #    info_txt)
-        wizard = kodi.WizardDialog_Input(wizard, 'server', 'Gamestream Server',
-            xbmcgui.INPUT_IPADDRESS, self._builder_validate_gamestream_server_connection)
-        # Pairing with pin code will be postponed untill crypto and certificate support in kodi
-        wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, self._builder_generate_pair_pincode)
+        options = {}
+        options['IMPORT'] = 'Import existing (or create manually)'
+        options[crypto.CREATE_WITH_CRYPTOLIB] = f'Use cryptography library (Available: {"yes" if crypto.UTILS_CRYPTOGRAPHY_AVAILABLE else "no"})'
+        options[crypto.CREATE_WITH_PYOPENSSL] = f'Use OpenSSL library (Available: {"yes" if crypto.UTILS_OPENSSL_AVAILABLE else "no"}, DEPRECATED)'
+        options[crypto.CREATE_WITH_OPENSSL]   = f'Execute OpenSSL command'
+
         wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
-            self._builder_try_to_resolve_path_to_nvidia_certificates)
-        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select the path with valid certificates', 
-            0, '', self._builder_validate_nvidia_certificates) 
-        
-        info_txt = f'Pairing with GameStream PC. If requested on the remote PC enter pincode'
+            self._wizard_try_to_resolve_path_to_nvidia_certificates)
+        wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, 
+            self._wizard_generate_pair_pincode)
+
+        wizard = kodi.WizardDialog_Input(wizard, 'server', 'Gamestream Server',
+            xbmcgui.INPUT_IPADDRESS, self._wizard_validate_gamestream_server_connection)
+        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'dummy', 'Pairing with Gamestream PC',
+            info_txt)        
+        wizard = kodi.WizardDialog_DictionarySelection(wizard, 'cert_action', 'How to apply certificates', options)
+        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select location to store certificates', 
+            0, '', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
+        wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select certificates path', 
+            0, '', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
+
+        pair_txt =  'We are going to connect with the Gamestream PC.\n'
+        pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
+        pair_txt += 'Press OK to start pairing process.'
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'pincode', 'Pairing with Gamestream PC',
-            info_txt, self._builder_pair_with_server)
+            pair_txt, None, self._wizard_start_pairing_with_server)
         
+        pair_success_txt =  'Plugin is successfully paired with the Gamestream PC.\n'
+        pair_success_txt += 'You now can scan the game collection.'
+        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'ispaired', 'Pairing with Gamestream PC',
+            pair_success_txt, None, self._wizard_is_paired)
+
+        pair_fail_txt =  'Unfortunately we were not able to pair with the Gamestream PC.\n'
+        pair_fail_txt += 'Inspect the logs for more details.'
+        wizard = kodi.WizardDialog_FormattedMessage(wizard, 'ispaired', 'Pairing with Gamestream PC',
+            pair_fail_txt, None, self._wizard_is_not_paired)
+
         return wizard
       
     def _configure_post_wizard_hook(self):
         return True
     
-    def _builder_try_to_resolve_path_to_nvidia_certificates(self, input, item_key, properties):
+    # wizard slide conditions
+    def _wizard_wants_to_create_certificate(self, item_key, properties) -> bool:
+        return properties['cert_action'] in [
+            crypto.CREATE_WITH_CRYPTOLIB, 
+            crypto.CREATE_WITH_PYOPENSSL, 
+            crypto.CREATE_WITH_OPENSSL]
+
+    def _wizard_wants_to_import_certificate(self, item_key, properties)  -> bool:
+        return not self._wizard_wants_to_create_certificate(item_key, properties)
+
+
+    def _wizard_start_pairing_with_server(self, item_key, properties) -> bool:
+        if self._wizard_is_paired(item_key, properties): return False
+
+        certificates_path = io.FileName(properties['certificates_path'])
+        pincode = properties[item_key]
+
+        asyncio.ensure_future(self._pair_with_server(properties['server'], certificates_path, pincode))
+        return True
+
+    def _wizard_is_paired(self, item_key, properties) -> bool:
+        certificates_path = io.FileName(properties['certificates_path'])
+        server = GameStreamServer(
+            properties['server'], 
+            certificates_path)
+
+        server.connect()
+        return server.is_paired()
+
+    def _wizard_is_not_paired(self, item_key, properties) -> bool:
+        return not self._wizard_is_paired(item_key, properties)
+
+    # after wizard slide actions
+    def _wizard_try_to_resolve_path_to_nvidia_certificates(self, input, item_key, properties):
         path = GameStreamServer.try_to_resolve_path_to_nvidia_certificates()
         return path
 
-    def _builder_validate_nvidia_certificates(self, input, item_key, properties):
+    def _wizard_create_certificates(self, input, item_key, properties):
+        certificates_path = io.FileName(input)
+        gs = GameStreamServer(input, certificates_path)
+        if not gs.create_certificates(properties['cert_action']):
+            kodi.notify_error("Failed to create certificates for pairing with Gamestream PC")
+        return input
+
+    def _wizard_validate_nvidia_certificates(self, input, item_key, properties):
         certificates_path = io.FileName(input)
         gs = GameStreamServer(input, certificates_path)
         if not gs.validate_certificates():
-            #kodi.notify_warn(
-            #    'Could not find certificates to validate. Make sure you already paired with '
-            #    'the server with the Shield or Moonlight applications.')
             kodi.notify_warn(
-                'Could not find certificates to validate. Creating certificates')
-            gs.create_certificates()
+                'Could not find certificates to validate. Make sure you already paired with '
+                'the server with the Shield or Moonlight applications.')
 
         return certificates_path.getPath()
     
-    def _builder_validate_gamestream_server_connection(self, input, item_key, properties):
+    def _wizard_validate_gamestream_server_connection(self, input, item_key, properties):
         gs = GameStreamServer(input, None)
         if not gs.connect():
             kodi.notify_warn('Could not connect to gamestream server')
@@ -139,21 +200,19 @@ class NvidiaStreamScanner(RomScannerStrategy):
         logger.debug(f'Found correct gamestream server with id "{properties["server_uuid"]}" and hostname "{properties["server_hostname"]}"')
         return input
     
-    def _builder_generate_pair_pincode(self, input, item_key, properties):
+    def _wizard_generate_pair_pincode(self, input, item_key, properties):
         return GameStreamServer(None, None).generatePincode()
 
-    def _builder_pair_with_server(self, input, item_key, properties):
-        certificates_path = io.FileName(properties['certificates_path'])
-        pincode = properties[item_key]
+    async def _pair_with_server(self, host_address:str, certificates_path:io.FileName, pincode:str):
         server = GameStreamServer(
-            properties['server'], 
+            host_address, 
             certificates_path, 
             debug_mode = True)
         
         server.connect()
         paired = server.pairServer(pincode)
-
-        logger.info(f"PAIRED {paired}")
+        self.scanner_settings['ispaired'] = paired
+        logger.info(f"Finished pairing. PAIRED {paired}")
 
     def _configure_get_edit_options(self) -> dict:
 
@@ -175,12 +234,12 @@ class NvidiaStreamScanner(RomScannerStrategy):
             logger.debug('_change_certificates(): Selected path = NONE')
             return
 
-        validated_path = self._builder_validate_nvidia_certificates(selected_path, 'certificates_path', self.scanner_settings)
+        validated_path = self._wizard_validate_nvidia_certificates(selected_path, 'certificates_path', self.scanner_settings)
         self.scanner_settings['certificates_path'] = validated_path
 
     def _update_server_info(self):
         if not kodi.dialog_yesno('Are you sure you want to update all server info?'): return
-        self._builder_validate_gamestream_server_connection(self.scanner_settings['server'],'server', self.scanner_settings)
+        self._wizard_validate_gamestream_server_connection(self.scanner_settings['server'],'server', self.scanner_settings)
             
     # ~~~ Scan for new files (*.*) and put them in a list ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     def _getCandidates(self, scanner_report: report.Reporter) -> typing.List[ROMCandidateABC]:

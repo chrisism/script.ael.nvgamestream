@@ -45,6 +45,7 @@ class GameStreamServer(object):
         self.host = host
         self.unique_id = random.getrandbits(16)
         self.debug_mode = debug_mode
+        self.server_info = None
 
         if certificates_path:
             self.certificates_path = certificates_path
@@ -175,8 +176,6 @@ class GameStreamServer(object):
         saltAndPin = salt + bytearray(pincode, 'utf-8')
         # Create an AES key from them
         aes_cypher = crypto.AESCipher(saltAndPin, hashAlgorithm)
-
-        salt_str = salt.decode()
 
         # get certificates ready
         logger.debug('Getting local certificate files')
@@ -408,9 +407,13 @@ class GameStreamServer(object):
 
         return True
 
-    def create_certificates(self):
+    def create_certificates(self, create_type = None) -> bool:
         logger.info('Creating self signed client certificate')
-        crypto.create_self_signed_cert("NVIDIA GameStream Client", self.certificate_file_path, self.certificate_key_file_path)
+        return crypto.create_self_signed_cert(
+            "NVIDIA GameStream Client", 
+            self.certificate_file_path, 
+            self.certificate_key_file_path,
+            create_type)
 
     @staticmethod
     def try_to_resolve_path_to_nvidia_certificates():

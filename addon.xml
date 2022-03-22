@@ -24,6 +24,6 @@
       <icon>media/icon.png</icon>
       <fanart>media/fanart.jpg</fanart>
     </assets>
-    <news>See changelog.txt for information about the latest release.</news>
+    <news>See changelog.md for information about the latest release.</news>
   </extension>
 </addon>

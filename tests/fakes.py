@@ -33,6 +33,8 @@ class FakeFile(io.FileName):
         self.fakeContent = data_str       
 
     def write_fake(self, bytes):
+        if not isinstance(bytes, str):
+            bytes = bytes.decode('utf-8')
         self.fakeContent = self.fakeContent + bytes
 
     def open(self, mode):pass

@@ -22,12 +22,11 @@ Read more about AKL on the main plugin's [ReadMe](https://github.com/chrisism/pl
 # Pairing with Nvidia Gamestream PC #
 
 We now have the ability to launch PC games through Nvidia gamestreaming. To scan for the available games on your
-PC we need to pair with the PC running Geforce Experience and for this we need valid certificates. Unfortunatly at 
-the moment we do not have default support in Kodi to do the needed actions with encryption and certificates to make 
-a secure connection. So to create the valid certificates and finish up the pairing process you need to do one of 
-the following actions.
+PC we need to pair with the PC running Geforce Experience and for this we need valid certificates to have a secure and encrypted connection with your Gamestream PC. However, creating the needed certificates might not always be properly supported in your Kodi installation. So in the case it is not supported to create the valid certificates and finish up the pairing process you need to do one of the following actions.
 
-## 1. Run custom pairing python scripts 
+## 1. Use OpenSSL to create the certificate
+
+## 2. Run custom pairing python scripts 
 
 Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and the needed libraries, like the OpenSSL. Then go to the /tools folder of the source code.
 The script must be called with two parameters, host and path where to store the new certificates.
@@ -42,7 +41,7 @@ Nvidia Geforce Experience. When done correctly it will pair up with that compute
 keep on communicating with the geforce experience computer. These certificates can be used in a Gamestream Launcher when
 running AKL in Kodi.
 
-## 2. Use certificates from Moonlight
+## 3. Use certificates from Moonlight
 
 If you have installed Moonlight as your client for Nvidia Gamestream and you already used that to pair with your Gamestream
 server, then you can reuse those certificates. Out of the box the certificates are not yet ready to be used with the AKL scripts.
