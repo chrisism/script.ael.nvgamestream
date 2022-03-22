@@ -47,8 +47,8 @@ class Test_cryptography_test(unittest.TestCase):
         
         # arrange
         test_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = io.FileName(test_dir + '/nv_client_test.crt')
-        key_path = io.FileName(test_dir + '/nv_client_test.key')
+        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
+        key_path = FakeFile(test_dir + '/nv_client_test.key')
 
         # act
         target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
@@ -60,24 +60,6 @@ class Test_cryptography_test(unittest.TestCase):
 
         # assert
         self.assertIsNotNone(actual)
-
-    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
-    def test_decrypt_cert(self, addondir):
-        # arrange
-        test_dir = os.path.dirname(os.path.abspath(__file__))
-        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
-        key_path = FakeFile(test_dir + '/nv_client_test.key')
-
-        # act
-        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
-            create_type=target.CREATE_WITH_CRYPTOLIB)
-        certificate_data = cert_path.getFakeContent().encode('ascii')
-        certificate_key = key_path.getFakeContent().encode('ascii')
-
-        data = target.get_certificate_public_key(certificate_data)
-        # target.AESCipher
-
-        # arrange
 
     @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
     def test_create_certificates(self, get_addon):
@@ -159,6 +141,25 @@ class Test_cryptography_test(unittest.TestCase):
             b = a
             z = b is None
         subjectPublicKeyInfo = tbsCertificate[6]
+
+    @unittest.skip('proofofconcept')
+    @patch('resources.lib.crypto.kodi.getAddonDir', autospec=True, return_value=FakeFile(''))
+    def test_decrypt_cert(self, addondir):
+        # arrange
+        test_dir = os.path.dirname(os.path.abspath(__file__))
+        cert_path = FakeFile(test_dir + '/nv_client_test.crt')
+        key_path = FakeFile(test_dir + '/nv_client_test.key')
+
+        # act
+        target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
+            create_type=target.CREATE_WITH_CRYPTOLIB)
+        certificate_data = cert_path.getFakeContent().encode('ascii')
+        certificate_key = key_path.getFakeContent().encode('ascii')
+
+        data = target.get_certificate_public_key(certificate_data)
+        # target.AESCipher
+
+        # arrange
         
 if __name__ == '__main__':
     unittest.main()
