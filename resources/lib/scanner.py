@@ -143,7 +143,6 @@ class NvidiaStreamScanner(RomScannerStrategy):
     def _wizard_wants_to_import_certificate(self, item_key, properties)  -> bool:
         return not self._wizard_wants_to_create_certificate(item_key, properties)
 
-
     def _wizard_start_pairing_with_server(self, item_key, properties) -> bool:
         if self._wizard_is_paired(item_key, properties): return False
 
@@ -204,15 +203,12 @@ class NvidiaStreamScanner(RomScannerStrategy):
         return GameStreamServer(None, None).generatePincode()
 
     async def _pair_with_server(self, host_address:str, certificates_path:io.FileName, pincode:str):
-        server = GameStreamServer(
-            host_address, 
-            certificates_path, 
-            debug_mode = True)
-        
+        server = GameStreamServer(host_address, certificates_path)
         server.connect()
+
         paired = server.pairServer(pincode)
         self.scanner_settings['ispaired'] = paired
-        logger.info(f"Finished pairing. PAIRED {paired}")
+        logger.info(f"Finished pairing. Result paired: {paired}")
 
     def _configure_get_edit_options(self) -> dict:
 

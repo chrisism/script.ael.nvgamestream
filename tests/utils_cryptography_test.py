@@ -7,7 +7,7 @@ from tests.fakes import FakeFile
 from akl.utils import io
 import resources.lib.crypto as target
 
-from Crypto.Util.asn1 import DerSequence
+from Cryptodome.Util.asn1 import DerSequence
 from binascii import a2b_base64
 import binascii
 class Test_cryptography_test(unittest.TestCase):

@@ -46,7 +46,7 @@ try:
     from Cryptodome.Hash import SHA256
     from Cryptodome.Cipher import AES, PKCS1_v1_5 as PKCS1_v1_5_c
     from Cryptodome.Random import get_random_bytes
-    from Crypto.Util.asn1 import DerSequence
+    from Cryptodome.Util.asn1 import DerSequence
     UTILS_PYCRYPTO_AVAILABLE = True
 except:
     UTILS_PYCRYPTO_AVAILABLE = False
