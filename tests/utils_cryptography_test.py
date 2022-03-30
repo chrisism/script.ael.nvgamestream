@@ -53,7 +53,6 @@ class Test_cryptography_test(unittest.TestCase):
         # act
         target.create_self_signed_cert("NVIDIA GameStream Client", cert_path, key_path, 
             create_type=target.CREATE_WITH_CRYPTOLIB) 
-            #create_type=target.CREATE_WITH_DOME)
         certificate_data:str = cert_path.loadFileToStr(encoding='ascii')
         certificate_data = certificate_data.encode('ascii') #getFakeContent().encode('ascii')
         actual = target.get_certificate_signature(certificate_data)

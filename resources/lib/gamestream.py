@@ -153,7 +153,10 @@ class GameStreamServer(object):
         pairStatus = self.server_info.find('PairStatus')
         return pairStatus.text == '1'
 
-    def pairServer(self, pincode):
+    def pairServer(self, pincode:str, progress_dialog:kodi.ProgressDialog = None):
+        if progress_dialog: 
+            progress_dialog.updateProgress(10, "Connecting with Gamestream PC")
+
         if not self.is_connected():
             logger.warning('Connect first')
             return False
@@ -168,7 +171,6 @@ class GameStreamServer(object):
         else:
             # Prior to Gen 7, SHA-1 is used
             hashAlgorithm = crypto.HashAlgorithm(1)
-        logger.debug(f"Pin {pincode}")
 
         # Generate a salt for hashing the PIN
         salt = crypto.randomBytes(16)
@@ -176,6 +178,9 @@ class GameStreamServer(object):
         saltAndPin = salt + bytearray(pincode, 'utf-8')
         # Create an AES key from them
         aes_cypher = crypto.AESCipher(saltAndPin, hashAlgorithm)
+
+        if progress_dialog: 
+            progress_dialog.updateProgress(50, f"Pairing. Use pincode [B]{pincode}[/B]")
 
         # get certificates ready
         logger.debug('Getting local certificate files')
@@ -196,6 +201,9 @@ class GameStreamServer(object):
         if pairing_result is None:
             logger.error('Failed to pair with server. No XML received.')
             return False
+
+        if progress_dialog: 
+            progress_dialog.updateProgress(75, "Validating pairing response from Gamestream PC")
 
         isPaired = pairing_result.find('paired').text
         if isPaired != '1':
@@ -231,7 +239,7 @@ class GameStreamServer(object):
         # Decode the server's response and subsequent challenge
         logger.debug("Decoding server's response and challenge response")
         server_challenge_hex        = pairing_challenge_result.find('challengeresponse').text
-        server_challenge_bytes      = bytearray.fromhex(server_challenge_hex)
+        server_challenge_bytes      = bytes.fromhex(server_challenge_hex)
         server_challenge_decrypted  = aes_cypher.decrypt(server_challenge_bytes)
         
         server_challenge_firstbytes = server_challenge_decrypted[:hashAlgorithm.digest_size()]
@@ -243,7 +251,7 @@ class GameStreamServer(object):
         challenge_response          = server_challenge_lastbytes + certificate_signature + client_secret
         challenge_response_hashed   = hashAlgorithm.hash(challenge_response)
         challenge_response_encrypted= aes_cypher.encryptToHex(challenge_response_hashed)
-        
+
         # Send the challenge response to the server
         logger.debug('Sending the challenge response to the server')
         pairing_secret_response = self._perform_server_request('pair', False, {
@@ -251,6 +259,9 @@ class GameStreamServer(object):
             'updateState': 1, 
             'serverchallengeresp': challenge_response_encrypted.decode('utf-8') })
         
+        if progress_dialog: 
+            progress_dialog.updateProgress(90, "Validating paired connection Gamestream PC")
+
         if pairing_secret_response is None:
             logger.error('Failed to pair with server. No XML received.')
             return False
@@ -263,7 +274,7 @@ class GameStreamServer(object):
 
         # Get the server's signed secret
         logger.debug('Verifiying server signature')
-        server_secret_response  = bytearray.fromhex(pairing_secret_response.find('pairingsecret').text)
+        server_secret_response  = bytes.fromhex(pairing_secret_response.find('pairingsecret').text)
         server_secret           = server_secret_response[:16]
         server_signature        = server_secret_response[16:272]
 

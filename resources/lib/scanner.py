@@ -20,7 +20,6 @@ from __future__ import division
 import logging
 import typing
 import collections
-import asyncio
 
 # --- Kodi packages --
 import xbmcgui
@@ -80,7 +79,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         path = self.scanner_settings['certificates_path'] if 'certificates_path' in self.scanner_settings else None
         if path: return io.FileName(path)
         return None
-    
+
     def _configure_get_wizard(self, wizard) -> kodi.WizardDialog:
         logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
         logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
@@ -116,7 +115,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
         pair_txt += 'Press OK to start pairing process.'
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'pincode', 'Pairing with Gamestream PC',
-            pair_txt, None, self._wizard_start_pairing_with_server)
+            pair_txt, self._wizard_start_pairing_with_server, self._wizard_is_not_paired)
         
         pair_success_txt =  'Plugin is successfully paired with the Gamestream PC.\n'
         pair_success_txt += 'You now can scan the game collection.'
@@ -142,15 +141,6 @@ class NvidiaStreamScanner(RomScannerStrategy):
 
     def _wizard_wants_to_import_certificate(self, item_key, properties)  -> bool:
         return not self._wizard_wants_to_create_certificate(item_key, properties)
-
-    def _wizard_start_pairing_with_server(self, item_key, properties) -> bool:
-        if self._wizard_is_paired(item_key, properties): return False
-
-        certificates_path = io.FileName(properties['certificates_path'])
-        pincode = properties[item_key]
-
-        asyncio.ensure_future(self._pair_with_server(properties['server'], certificates_path, pincode))
-        return True
 
     def _wizard_is_paired(self, item_key, properties) -> bool:
         certificates_path = io.FileName(properties['certificates_path'])
@@ -202,13 +192,26 @@ class NvidiaStreamScanner(RomScannerStrategy):
     def _wizard_generate_pair_pincode(self, input, item_key, properties):
         return GameStreamServer(None, None).generatePincode()
 
-    async def _pair_with_server(self, host_address:str, certificates_path:io.FileName, pincode:str):
-        server = GameStreamServer(host_address, certificates_path)
+    def _wizard_start_pairing_with_server(self, input, item_key, properties):
+        logger.info('Starting pairing process')
+        certificates_path = io.FileName(properties['certificates_path'])
+        pincode = properties[item_key]
+
+        logger.info('Starting pairing process')
+        server = GameStreamServer(
+            properties['server'], 
+            certificates_path, 
+            debug_mode=True)
         server.connect()
 
-        paired = server.pairServer(pincode)
+        progress_dialog = kodi.ProgressDialog()
+        progress_dialog.startProgress()
+        paired = server.pairServer(pincode, progress_dialog)
         self.scanner_settings['ispaired'] = paired
         logger.info(f"Finished pairing. Result paired: {paired}")
+        progress_dialog.endProgress()
+        
+        return pincode
 
     def _configure_get_edit_options(self) -> dict:
 
@@ -342,5 +345,3 @@ class NvidiaStreamScanner(RomScannerStrategy):
            
         self.progress_dialog.endProgress()
         return new_roms
-
-             

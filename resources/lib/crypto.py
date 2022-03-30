@@ -99,8 +99,11 @@ def create_self_signed_cert_with_cryptodome(cert_name, cert_file_path:io.FileNam
     
 def create_self_signed_cert_with_openssl(cert_name, cert_file_path:io.FileName, key_file_path:io.FileName) -> bool:
     executor = None
+    
     logFile = kodi.getAddonDir().pjoin(f'create_cert_{datetime.now().timestamp()}.txt')
     logFile = io.FileName(logFile.getPathTranslated())
+    logFile.makedirs()
+
     if io.is_windows(): executor = WindowsExecutor(logFile, False, False)
     elif io.is_android(): executor = LinuxExecutor(logFile, False)#AndroidExecutor()
     elif io.is_linux(): executor = LinuxExecutor(logFile, False)
@@ -112,7 +115,7 @@ def create_self_signed_cert_with_openssl(cert_name, cert_file_path:io.FileName, 
     args += f"-out {cert_file_path.getPathTranslated()} -sha1 -days 3650 "
     args += f'-subj "/C=GL/ST=GL/L=KODI/O=AKL/OU=AKL/CN={cert_name}"'
 
-    executor.execute('openssl', args, False)
+    executor.execute('openssl', args, True)
 
     return cert_file_path.exists()
     
@@ -190,24 +193,23 @@ def create_self_signed_cert_with_cryptolib(cert_name, cert_file_path:io.FileName
 def get_certificate_public_key(certificate_data:bytes):
     rsa_key = RSA.importKey(certificate_data) 
     pub_key = rsa_key.publickey()
-    pk_data = pub_key.export_key()
+    pk_data = pub_key.exportKey()
 
     return pk_data
 
 def get_certificate_signature(certificate_data:bytes) -> bytes:
-    #c = x509.load_pem_x509_certificate(certificate_data, default_backend())
-    #return cert.signature
     cert_data_str   = certificate_data.decode()
     lines           = cert_data_str.replace(" ",'').split()
     cert_der        = binascii.a2b_base64("".join(lines[1:-1]))
 
-    #cert = DerSequence()
-    #cert.decode(cert_der)
-    #tbsCertificate = DerSequence()
-    #tbsCertificate.decode(cert[0])
-    #signature = cert[2][len(cert[2])-256:]
-    
-    signature = cert_der[len(cert_der)-256:]
+    cert = DerSequence()
+    cert.decode(cert_der)
+    tbsCertificate = DerSequence()
+    tbsCertificate.decode(cert[0])
+    signature = cert[2][len(cert[2])-256:]
+    #c = x509.load_pem_x509_certificate(certificate_data, default_backend())
+    #return cert.signature
+    #signature = cert_der[len(cert_der)-256:]
     return signature
 
 def verify_signature(data:bytes, signature:bytes, certificate_data:bytes):
@@ -245,13 +247,12 @@ class HashAlgorithm(object):
             self.hashLength = 20
        
     def _algorithm(self):
-
         if self.shaVersion == 256:
             return hashlib.sha256()
         else:
             return hashlib.sha1()
 
-    def hash(self, value):
+    def hash(self, value:bytes):
         algorithm = self._algorithm()
         algorithm.update(value)
         hashedValue = algorithm.digest()
@@ -269,24 +270,22 @@ BLOCK_SIZE = 16
 
 class AESCipher(object):
 
-    def __init__(self, key, hashAlgorithm):
-        
+    def __init__(self, key:bytes, hashAlgorithm:HashAlgorithm):
         keyHashed = hashAlgorithm.hash(key)
         truncatedKeyHashed = keyHashed[:16]
 
         self.key = truncatedKeyHashed
 
-    def encrypt(self, raw):
+    def encrypt(self, raw:bytes):
         cipher = AES.new(self.key, AES.MODE_ECB)
         encrypted = cipher.encrypt(raw)
         return encrypted
 
-    def encryptToHex(self, raw):
+    def encryptToHex(self, raw:bytes):
         encrypted = self.encrypt(raw)
         return binascii.hexlify(encrypted)
 
-    def decrypt(self, enc: bytearray):
+    def decrypt(self, enc: bytes):
         cipher = AES.new(self.key, AES.MODE_ECB)
-        
         decrypted = cipher.decrypt(enc)
         return decrypted
