@@ -19,7 +19,6 @@ from __future__ import division
 import logging
 import os
 import collections
-import asyncio
 
 # -- Kodi packages --
 import xbmcgui
@@ -63,9 +62,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
     # Creates a new launcher using a wizard of dialogs. Called by parent build() method.
     #
     def _wizard_get_wizard(self, wizard):    
-        logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_configure_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
+        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
+        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
+        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
         info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
         info_txt += 'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '
@@ -94,7 +93,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
             {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'},
             None, lambda pk,p: not io.is_android())
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Gamestream client jar',
-            1, self._wizard_get_appbrowser_filter, None, lambda pk, p: not io.is_android())
+            1, self._builder_get_appbrowser_filter, None, lambda pk, p: not io.is_android())
         wizard = kodi.WizardDialog_Keyboard(wizard, 'args', 'Additional arguments', 
             None, lambda pk, p: not io.is_android())
 
@@ -111,7 +110,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
         pair_txt += 'Press OK to start pairing process.'
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'pincode', 'Pairing with Gamestream PC',
-            pair_txt, None, self._wizard_start_pairing_with_server)
+            pair_txt, self._wizard_start_pairing_with_server, self._wizard_is_not_paired)
         
         pair_success_txt =  'Plugin is successfully paired with the Gamestream PC.\n'
         pair_success_txt += 'You now can scan the game collection.'
@@ -135,15 +134,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
     def _wizard_wants_to_import_certificate(self, item_key, properties)  -> bool:
         return not self._wizard_wants_to_create_certificate(item_key, properties)
 
-    def _wizard_start_pairing_with_server(self, item_key, properties) -> bool:
-        if self._wizard_is_paired(item_key, properties): return False
-
-        certificates_path = io.FileName(properties['certificates_path'])
-        pincode = properties[item_key]
-
-        asyncio.ensure_future(self._pair_with_server(properties['server'], certificates_path, pincode))
-        return True
-
     def _wizard_is_paired(self, item_key, properties) -> bool:
         certificates_path = io.FileName(properties['certificates_path'])
         server = GameStreamServer(
@@ -159,6 +149,27 @@ class NvidiaGameStreamLauncher(LauncherABC):
     # after wizard slide actions
     def _wizard_generate_pair_pincode(self, input, item_key, launcher):
         return GameStreamServer(None, None).generatePincode()
+
+    def _wizard_start_pairing_with_server(self, input, item_key, properties):
+        logger.info('Starting pairing process')
+        certificates_path = io.FileName(properties['certificates_path'])
+        pincode = properties[item_key]
+
+        logger.info('Starting pairing process')
+        server = GameStreamServer(
+            properties['server'], 
+            certificates_path, 
+            debug_mode=True)
+        server.connect()
+
+        progress_dialog = kodi.ProgressDialog()
+        progress_dialog.startProgress()
+        paired = server.pairServer(pincode, progress_dialog)
+        self.launcher_settings['ispaired'] = paired
+        logger.info(f"Finished pairing. Result paired: {paired}")
+        progress_dialog.endProgress()
+        
+        return pincode
 
     def _wizard_check_if_selected_gamestream_client_exists(self, input, item_key, launcher):
         if input == 'NVIDIA':
@@ -210,14 +221,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
         return input
 
-    async def _pair_with_server(self, host_address:str, certificates_path:io.FileName, pincode:str):
-        server = GameStreamServer(host_address, certificates_path)
-        server.connect()
-        
-        paired = server.pairServer(pincode)
-        self.launcher_settings['ispaired'] = paired
-        logger.info(f"Finished pairing. Result paired: {paired}")
-       
     def _wizard_get_edit_options(self) -> dict:
         streamClient = self.launcher_settings['application']
         if streamClient == 'NVIDIA':
@@ -232,7 +235,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         options[self._change_certificates]  = f"Change certificates: '{self.get_certificates_path().getPath()}'"
         options[self._update_server_info]   = "Update server info"
         return options
-    
+
     def _change_application(self):
         current_application = self.launcher_settings['application']
         
@@ -249,7 +252,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
         if not io.is_android() and selected_application == 'JAVA':
             selected_application = xbmcgui.Dialog().browse(1, 'Select the Gamestream client jar', 'files',
-                                                      self._wizard_get_appbrowser_filter('application', self.launcher_settings),
+                                                      self._builder_get_appbrowser_filter('application', self.launcher_settings),
                                                       False, False, current_application)
 
         if selected_application is None or selected_application == current_application:
