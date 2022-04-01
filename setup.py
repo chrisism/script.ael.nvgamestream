@@ -53,7 +53,8 @@ setup(
     install_requires=[
         "script.module.akl",
         "cryptography",
-        "pycryptodomex"
+        "pycryptodomex",
+        "Kodistubs==19.0.3"
     ],
     python_requires=">=3.8",
     entry_points = '''

@@ -200,8 +200,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         logger.info('Starting pairing process')
         server = GameStreamServer(
             properties['server'], 
-            certificates_path, 
-            debug_mode=True)
+            certificates_path)
         server.connect()
 
         progress_dialog = kodi.ProgressDialog()
