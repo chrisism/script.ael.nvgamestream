@@ -40,8 +40,12 @@ setup(
     long_description_content_type='text/markdown',
     url=PROJECT_URL,
     license=LICENSE,
-    package_dir={'', '../'}
-    packages=["script.akl.nvgamestream"],
+    package_dir={'script_akl_nvgamestream': './'},
+    packages=[
+        'script_akl_nvgamestream',
+        'script_akl_nvgamestream.resources.lib',
+        'script_akl_nvgamestream.resources.tools',
+    ],
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
