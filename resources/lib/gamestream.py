@@ -17,7 +17,6 @@
 from __future__ import unicode_literals
 from __future__ import division
 
-from datetime import datetime
 import logging
 
 from os.path import expanduser
@@ -180,7 +179,7 @@ class GameStreamServer(object):
         aes_cypher = crypto.AESCipher(saltAndPin, hashAlgorithm)
 
         if progress_dialog: 
-            progress_dialog.updateProgress(50, f"Pairing. Use pincode [B]{pincode}[/B]")
+            progress_dialog.updateProgress(50, f"Insert pincode [B]{pincode}[/B] on your Gamestream PC")
 
         # get certificates ready
         logger.debug('Getting local certificate files')

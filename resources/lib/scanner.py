@@ -205,7 +205,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         server.connect()
 
         progress_dialog = kodi.ProgressDialog()
-        progress_dialog.startProgress()
+        progress_dialog.startProgress("Starting pairing process")
         paired = server.pairServer(pincode, progress_dialog)
         self.scanner_settings['ispaired'] = paired
         logger.info(f"Finished pairing. Result paired: {paired}")
