@@ -119,6 +119,10 @@ stages:
               *.txt
               resources/**/*.*
               media/**/*.*
+              !setup.*
+              !MANIFEST.in
+              !dist/**/*.*
+              !build/**/*.*
               !requirements.txt
               !**/*.pyc
               !**/__pycache__/**/*.*
