@@ -50,6 +50,11 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
     ],
+    install_requires=[
+        "script.module.akl",
+        "cryptography",
+        "pycryptodomex"
+    ],
     python_requires=">=3.8",
     entry_points = '''
         [console_scripts]

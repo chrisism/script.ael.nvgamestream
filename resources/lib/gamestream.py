@@ -426,7 +426,7 @@ class GameStreamServer(object):
             create_type)
 
     @staticmethod
-    def try_to_resolve_path_to_nvidia_certificates():
+    def try_to_resolve_path_to_nvidia_certificates() -> str:
         home = expanduser("~")
         homePath = io.FileName(home)
 
@@ -438,4 +438,8 @@ class GameStreamServer(object):
         if possiblePath.exists():
             return possiblePath.getPath()
 
-        return homePath.getPath()
+        addon_certificates_directory = kodi.getAddonDir().pjoin("certificates", isdir=True)
+        if not addon_certificates_directory.exists():
+            addon_certificates_directory.makedirs()
+            
+        return addon_certificates_directory.getPath()
