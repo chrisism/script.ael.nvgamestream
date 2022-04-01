@@ -14,12 +14,19 @@ PROJECT_URL = 'https://github.com/chrisism/script.akl.nvgamestream'
 LICENSE = ''
 LONG_DESCRIPTION = ''
 
-number_of_arguments = len(sys.argv)
-version_parameter = sys.argv[-1]
-VERSION = version_parameter.split("=")[1]
-sys.argv = sys.argv[0:number_of_arguments-1]
-
 here = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(here, 'addon.xml'), encoding='utf-8') as f:
+    str_data = f.read()
+    tree = ET.fromstring(str_data)
+    
+    NAME = tree.get('id')
+    VERSION = tree.get('version').replace("~", "-")
+    AUTHOR = tree.get('provider-name')
+    AUTHOR_EMAIL = tree.findall('.//email')[0].text
+    DESCRIPTION = tree.findall('.//description')[0].text
+    PROJECT_URL = tree.findall('.//website')[0].text
+    LICENSE = tree.findall('.//license')[0].text
+
 with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
