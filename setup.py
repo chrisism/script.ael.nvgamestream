@@ -40,6 +40,8 @@ setup(
     long_description_content_type='text/markdown',
     url=PROJECT_URL,
     license=LICENSE,
+    package_dir={"": ""},
+    packages="scirpt.akl.nvgamestream",
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
