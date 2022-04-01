@@ -39,4 +39,6 @@ def main():
         logger.fatal('Exception in tool', exc_info=ex)
 
 if __name__ == '__main__':
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    sys.path.append(root)
     main()

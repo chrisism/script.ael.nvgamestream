@@ -63,4 +63,8 @@ def main():
     pair(host, path)
 
 if __name__ == '__main__':
+
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    sys.path.append(root)
+#   sys.path.append(os.path.join(root, 'resources'))
     main()
