@@ -53,7 +53,7 @@ setup(
     python_requires=">=3.8",
     entry_points = '''
         [console_scripts]
-        create_certificates=script_akl_nvgamestream.resources.lib.tools.create_certificates:main
-        pair_with_gspc=script_akl_nvgamestream.resources.lib.tools.pair_with_gspc:main
+        create_certificates=script_akl_nvgamestream.resources.tools.create_certificates:main
+        pair_with_gspc=script_akl_nvgamestream.resources.tools.pair_with_gspc:main
     '''
 )
