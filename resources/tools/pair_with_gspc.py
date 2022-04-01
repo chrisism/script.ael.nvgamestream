@@ -1,11 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Pairing with Nvidia Gamestream Server
-# OpenSSL needed
+# Pairing with Nvidia Gamestream PC
 #
-# This tool must be called with two parameters, host and path where to store certificates.
+# This tool must be called with two parameters, host and path where the certificates are found.
 # Example: >python pair_with_nvidia.py 192.168.1.99 c:\games\gamestream\
+#
+# Certificate files should be named 'nvidia.crt' and 'nvidia.key'.
 #
 # When started this tool will show a unique pincode which you need to enter in a dialog
 # on your computer which is running Nvidia Geforce Experience. When done correctly it will
@@ -56,9 +57,6 @@ def pair(host:str, path:str):
         print(f"Pairing with {host} succeeded")
 
 def main():
-    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-    sys.path.append(root)
-
     host = sys.argv[1]
     path = sys.argv[2]
 

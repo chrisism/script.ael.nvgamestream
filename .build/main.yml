@@ -79,6 +79,11 @@ stages:
           pip install -r requirements.txt
         displayName: pip install 
 
+      - task: TwineAuthenticate@1
+        displayName: Twine Authenticate
+        inputs:
+          artifactFeed: AKL/akl_libs  
+        
       - task: RegExMatchReplace@2
         displayName: 'Set addon version'
         inputs:
@@ -89,6 +94,15 @@ stages:
       - bash: update_addon_news $(workingDirectory)/addon.xml $(workingDirectory)/changelog.md
         displayName: 'Add changelog in addon.xml'
         workingDirectory: '$(workingDirectory)'
+
+      - script: |
+          python setup.py bdist_wheel
+        displayName: Build python package          
+
+      - script: |
+          python -m twine upload -r akl_libs --config-file $(PYPIRC_PATH) dist/*.whl
+        displayName: Upload python package
+        condition: or(eq(${{variables.isMaster}}, true), eq(${{variables.isReleaseCandidate}}, true), eq(${{variables.isHotfix}}, true))
 
       - bash: 'python -m pytest --junitxml=$(build.artifactstagingdirectory)/$(addonName)_$(addonVersion)_testresults.xml' 
         workingDirectory: '$(workingDirectory)'
