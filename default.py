@@ -87,6 +87,7 @@ def launch_rom(args):
         execution_settings.media_state_action       = settings.getSettingAsInt('media_state_action')
         execution_settings.suspend_audio_engine     = settings.getSettingAsBool('suspend_audio_engine')
         execution_settings.suspend_screensaver      = settings.getSettingAsBool('suspend_screensaver')
+        execution_settings.suspend_joystick_engine  = settings.getSettingAsBool('suspend_joystick')
                 
         addon_dir = kodi.getAddonDir()
         report_path = addon_dir.pjoin('reports')

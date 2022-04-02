@@ -38,6 +38,10 @@ msgctxt "#30124"
 msgid "Suspend/resume Kodi screensaver"
 msgstr "settings.xml"
 
+msgctxt "#30125"
+msgid "Suspend/resume Kodi joystick engine"
+msgstr "settings.xml"
+
 msgctxt "#30129"
 msgid "Log level"
 msgstr "settings.xml"

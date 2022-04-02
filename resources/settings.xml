@@ -37,6 +37,11 @@
                     <default>false</default>
                     <control type="toggle"/>
                 </setting>
+                <setting id="suspend_joystick" type="boolean" label="30125" help="">
+                    <level>0</level>
+                    <default>false</default>
+                    <control type="toggle"/>
+                </setting>
             </group>
         </category>
         <category id="akl_advanced" label="30011">
