@@ -76,8 +76,8 @@ class GameStreamServer(object):
             self.certificate_key_file_path.exists() and \
             self.certificate_file_path.exists():
             
-            key_file  = self.certificate_key_file_path.getPath()
-            cert_file = self.certificate_file_path.getPath()
+            key_file  = self.certificate_key_file_path.getPathTranslated()
+            cert_file = self.certificate_file_path.getPathTranslated()
             page_data, http_code = net.get_URL(url, verify_ssl=False, cert=(cert_file, key_file))
         else:
             page_data, http_code = net.get_URL(url, verify_ssl=False)
