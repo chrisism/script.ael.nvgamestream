@@ -367,7 +367,7 @@ class GameStreamServer(object):
 
         logger.info(f'Loading client certificate data from {self.certificate_file_path.getPath()}')
 
-        with open(self.certificate_file_path.getPath(), 'r', encoding='ascii') as f:
+        with open(self.certificate_file_path.getPathTranslated(), 'r', encoding='ascii') as f:
             data = f.read()
             self.pem_cert_data = data.encode('ascii')
 
@@ -386,7 +386,7 @@ class GameStreamServer(object):
         logger.info(f'Loading client certificate data from {self.certificate_key_file_path.getPath()}')
         #self.key_cert_data = self.certificate_key_file_path.loadFileToStr(encoding=None)#.encode('ascii')
 
-        with open(self.certificate_key_file_path.getPath(), 'r', encoding='ascii') as f:
+        with open(self.certificate_key_file_path.getPathTranslated(), 'r', encoding='ascii') as f:
             data = f.read()
             self.key_cert_data = data.encode('ascii')
         return self.key_cert_data
