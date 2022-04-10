@@ -220,7 +220,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
         return input
 
-    def _wizard_get_edit_options(self) -> dict:
+    def _builder_get_edit_options(self) -> dict:
         streamClient = self.launcher_settings['application']
         if streamClient == 'NVIDIA':
             streamClient = 'Nvidia'
@@ -239,9 +239,15 @@ class NvidiaGameStreamLauncher(LauncherABC):
         current_application = self.launcher_settings['application']
         
         if io.is_android():            
-            options = {'NVIDIA': 'Nvidia', 'MOONLIGHT': 'Moonlight'}  
+            options = {
+                'NVIDIA': 'Nvidia',
+                'MOONLIGHT': 'Moonlight'
+            }  
         else:
-            options = {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'}
+            options = {
+                'JAVA': 'Moonlight-PC (java)', 
+                'EXE': 'Moonlight-Chrome (not supported yet)'
+            }
 
         dialog = kodi.OrdDictionaryDialog()    
         selected_application = dialog.select('Select the client', options)
