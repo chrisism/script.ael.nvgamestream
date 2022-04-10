@@ -212,7 +212,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
             kodi.notify_warn('Could not connect to gamestream server')
             return input
 
-        launcher['server_id'] = 4 # not yet known what the origin is
+        launcher['server_id'] = '4' # not yet known what the origin is
         launcher['server_uuid'] = gs.get_uniqueid()
         launcher['server_hostname'] = gs.get_hostname()
 
@@ -337,9 +337,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
                 arguments += '-e AppName "$gamestream_name$" '
                 arguments += '-e PcName "$server_hostname$" '
                 arguments += '-e UUID $server_uuid$ '
-                arguments += '-e UniqueId {} '.format(text.misc_generate_random_SID())       
+                arguments += f'-e UniqueId {text.misc_generate_random_SID()} '     
         
         original_arguments = self.launcher_settings['args'] if 'args' in self.launcher_settings else ''
-        self.launcher_settings['args'] = '{} {}'.format(arguments, original_arguments)
+        self.launcher_settings['args'] = f"{arguments} {original_arguments}"
         return super(NvidiaGameStreamLauncher, self).get_arguments()
     
