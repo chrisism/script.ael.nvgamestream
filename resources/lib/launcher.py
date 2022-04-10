@@ -61,10 +61,10 @@ class NvidiaGameStreamLauncher(LauncherABC):
     #
     # Creates a new launcher using a wizard of dialogs. Called by parent build() method.
     #
-    def _wizard_get_wizard(self, wizard):    
-        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_wizard_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
+    def _builder_get_wizard(self, wizard):    
+        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
+        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
+        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
         info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
         info_txt += 'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '

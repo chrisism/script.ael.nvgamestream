@@ -1,3 +1,4 @@
+from cmath import exp
 import unittest, os
 import unittest.mock
 from unittest.mock import MagicMock, patch
@@ -128,6 +129,18 @@ class Test_gamestream(unittest.TestCase):
         # arranges
         self.assertEqual(expected, len(actual))
         
-
+    def test_get_certificate_bytes(self):
+        # arrange
+        addon_dir = io.FileName(f"{self.TEST_ASSETS_DIR}/certs/")
+        expected  = self.read_ascii_file(f"{self.TEST_ASSETS_DIR}/certs/nvidia.crt", encoding="ascii")
+        server = GameStreamServer('0.0.0.0', addon_dir, debug_mode = True)
+        
+        # act
+        actual = server.get_certificate_bytes()
+        
+        # assert
+        assert len(expected) == len(actual)
+        assert expected == actual
+        
 if __name__ == '__main__':
     unittest.main()
