@@ -330,9 +330,11 @@ class NvidiaGameStreamLauncher(LauncherABC):
    
         elif io.is_android():
             if stream_client == 'NVIDIA':
-                arguments =  'start --user 0 -a android.intent.action.VIEW '
-                arguments += '-n com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity '
-                arguments += '-d nvidia://stream/target/$server_id$/$gstreamid$'
+                server_id = self.get_server_id()
+
+                arguments =  "start --user 0 -a android.intent.action.VIEW "
+                arguments += "-n com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity "
+                arguments += f"-d nvidia://stream/target/{server_id}/$gstreamid$"
 
             elif stream_client == 'MOONLIGHT':
                 arguments =  'start --user 0 -a android.intent.action.MAIN '
