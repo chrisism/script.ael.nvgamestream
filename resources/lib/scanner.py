@@ -282,11 +282,11 @@ class NvidiaStreamScanner(RomScannerStrategy):
         
         for rom in reversed(roms):
             stream_id = rom.get_scanned_data_element('gstreamid')
-            logger.info('Searching stream ID#{}'.format(stream_id))
+            logger.info(f'Searching stream ID#{stream_id}')
             self.progress_dialog.updateProgress(i)
             
             if stream_id not in candidate_stream_ids:
-                logger.info('Not found. Marking as dead: #{} {}'.format(stream_id, rom.get_name()))
+                logger.info(f'Not found. Marking as dead: #{stream_id} {rom.get_name()}')
                 roms.remove(rom)
                 dead_roms.append(rom)
             i += 1
@@ -319,7 +319,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
             self.progress_dialog.updateProgress(num_items_checked, stream_candidate.get_name())
             
             if streamId in streamIdsAlreadyInCollection:
-                logger.debug('  ID#{} already in collection. Skipping'.format(streamId))
+                logger.debug(f'  ID#{streamId} already in collection. Skipping')
                 num_items_checked += 1
                 continue
             
