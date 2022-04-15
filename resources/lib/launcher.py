@@ -311,10 +311,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
             return application
             
         if io.is_android():
-            if stream_client == "NVIDIA":
-                application = "com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity"
-            else:
-                application = "/system/bin/am"
+            application = "/system/bin/am"
             return application
         
         return stream_client
@@ -330,29 +327,35 @@ class NvidiaGameStreamLauncher(LauncherABC):
             arguments.append('-fs')
             arguments.append('-app "$gamestream_name$"')
 
-        if io.is_android() and stream_client == "MOONLIGHT":
-            arguments.append('start --user 0 -a android.intent.action.MAIN')
-            arguments.append('-c android.intent.category.LAUNCHER')
-            arguments.append('-n com.limelight/com.limelight.ShortcutTrampoline')
-            arguments.append('-e Host $server$')
-            arguments.append('-e AppId $gstreamid$')
-            arguments.append('-e AppName "$gamestream_name$"')
-            arguments.append('-e PcName "$server_hostname$"')
-            arguments.append('-e UUID $server_uuid$')
-            arguments.append(f'-e UniqueId {text.misc_generate_random_SID()}')  
+        if io.is_android():
+            if stream_client == "NVIDIA":
+                server_id = self.get_server_id()
+
+                arguments.append("start --user 0 -a android.intent.action.VIEW")
+                arguments.append("-n com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity")
+                arguments.append(f"-d nvidia://stream/target/{server_id}/$gstreamid$")
+
+            if stream_client == "MOONLIGHT":
+                arguments.append('start --user 0 -a android.intent.action.MAIN')
+                arguments.append('-c android.intent.category.LAUNCHER')
+                arguments.append('-n com.limelight/com.limelight.ShortcutTrampoline')
+                arguments.append('-e Host $server$')
+                arguments.append('-e AppId $gstreamid$')
+                arguments.append('-e AppName "$gamestream_name$"')
+                arguments.append('-e PcName "$server_hostname$"')
+                arguments.append('-e UUID $server_uuid$')
+                arguments.append(f'-e UniqueId {text.misc_generate_random_SID()}')  
 
         return super(NvidiaGameStreamLauncher, self).get_arguments(*arguments)
     
     def get_keyworded_arguments(self, **kwargs) -> dict:
-        stream_client = self.launcher_settings['application']
-        
-        if io.is_android():
-            if stream_client == "NVIDIA":
-                server_id = self.get_server_id()
-                kwargs["intent"]  = "android.intent.action.VIEW"
-                kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
-
-            elif stream_client == "MOONLIGHT":
-                kwargs["intent"]   = "android.intent.action.MAIN"
+        # stream_client = self.launcher_settings['application']
+        # if io.is_android():
+        #     if stream_client == "NVIDIA":
+        #         server_id = self.get_server_id()
+        #         kwargs["intent"]  = "android.intent.action.VIEW"
+        #         kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
+        #     elif stream_client == "MOONLIGHT":
+        #         kwargs["intent"]   = "android.intent.action.MAIN"
         
         return super().get_keyworded_arguments(**kwargs)
