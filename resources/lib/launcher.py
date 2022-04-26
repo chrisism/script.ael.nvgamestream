@@ -331,12 +331,12 @@ class NvidiaGameStreamLauncher(LauncherABC):
             if stream_client == "NVIDIA":
                 server_id = self.get_server_id()
 
-                arguments.append("start --user 0 -a android.intent.action.VIEW")
+                arguments.append("start-activity --user 0 -a android.intent.action.VIEW")
                 arguments.append("-n com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity")
                 arguments.append(f"-d nvidia://stream/target/{server_id}/$gstreamid$")
 
             if stream_client == "MOONLIGHT":
-                arguments.append('start --user 0 -a android.intent.action.MAIN')
+                arguments.append('start-activity --user 0 -a android.intent.action.MAIN')
                 arguments.append('-c android.intent.category.LAUNCHER')
                 arguments.append('-n com.limelight/com.limelight.ShortcutTrampoline')
                 arguments.append('-e Host $server$')
