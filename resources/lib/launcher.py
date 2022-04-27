@@ -19,6 +19,7 @@ from __future__ import division
 import logging
 import os
 import collections
+import typing
 
 # -- Kodi packages --
 import xbmcgui
@@ -311,12 +312,15 @@ class NvidiaGameStreamLauncher(LauncherABC):
             return application
             
         if io.is_android():
-            application = "/system/bin/am"
+            if stream_client == "NVIDIA":
+                application = "com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity"
+            elif stream_client == "MOONLIGHT":
+                application = "com.limelight/com.limelight.ShortcutTrampoline"
             return application
         
         return stream_client
 
-    def get_arguments(self, *args) -> list:
+    def get_arguments(self, *args, **kwargs) -> typing.Tuple[list, dict]:
         stream_client = self.launcher_settings['application']
         arguments = list(args)
 
@@ -330,32 +334,18 @@ class NvidiaGameStreamLauncher(LauncherABC):
         if io.is_android():
             if stream_client == "NVIDIA":
                 server_id = self.get_server_id()
+                kwargs["intent"]  = "android.intent.action.VIEW"
+                kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
+            
+            elif stream_client == "MOONLIGHT":
+                kwargs["intent"]   = "android.intent.action.MAIN"
+                kwargs["category"] = "android.intent.category.LAUNCHER"
 
-                arguments.append("start-activity --user 0 -a android.intent.action.VIEW")
-                arguments.append("-n com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity")
-                arguments.append(f"-d nvidia://stream/target/{server_id}/$gstreamid$")
+                arguments.append('Host $server$')
+                arguments.append('AppId $gstreamid$')
+                arguments.append('AppName "$gamestream_name$"')
+                arguments.append('PcName "$server_hostname$"')
+                arguments.append('UUID $server_uuid$')
+                arguments.append(f'UniqueId {text.misc_generate_random_SID()}')  
 
-            if stream_client == "MOONLIGHT":
-                arguments.append('start-activity --user 0 -a android.intent.action.MAIN')
-                arguments.append('-c android.intent.category.LAUNCHER')
-                arguments.append('-n com.limelight/com.limelight.ShortcutTrampoline')
-                arguments.append('-e Host $server$')
-                arguments.append('-e AppId $gstreamid$')
-                arguments.append('-e AppName "$gamestream_name$"')
-                arguments.append('-e PcName "$server_hostname$"')
-                arguments.append('-e UUID $server_uuid$')
-                arguments.append(f'-e UniqueId {text.misc_generate_random_SID()}')  
-
-        return super(NvidiaGameStreamLauncher, self).get_arguments(*arguments)
-    
-    def get_keyworded_arguments(self, **kwargs) -> dict:
-        # stream_client = self.launcher_settings['application']
-        # if io.is_android():
-        #     if stream_client == "NVIDIA":
-        #         server_id = self.get_server_id()
-        #         kwargs["intent"]  = "android.intent.action.VIEW"
-        #         kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
-        #     elif stream_client == "MOONLIGHT":
-        #         kwargs["intent"]   = "android.intent.action.MAIN"
-        
-        return super().get_keyworded_arguments(**kwargs)
+        return super(NvidiaGameStreamLauncher, self).get_arguments(*arguments, **kwargs)
