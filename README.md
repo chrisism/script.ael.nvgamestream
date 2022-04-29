@@ -5,7 +5,6 @@ Nvidia Gamestream plugin for AKL which enables you to scan the games available i
 | Release | Status |
 |----|----|
 | Stable |[![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=main)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=main) |
-| Beta | [![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=release/1.0.0)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=release/1.0.0) |
 | Unstable | [![Build Status](https://dev.azure.com/jnpro/AKL/_apis/build/status/script.akl.nvgamestream?branchName=dev)](https://dev.azure.com/jnpro/AKL/_build/latest?definitionId=13&branchName=dev) |
 
 ### Kodi forum thread ###
@@ -25,15 +24,36 @@ We now have the ability to launch PC games through Nvidia gamestreaming. To scan
 PC we need to pair with the PC running Geforce Experience and for this we need valid certificates to have a secure and encrypted connection with your Gamestream PC. However, creating the needed certificates might not always be properly supported in your Kodi installation. So in the case it is not supported to create the valid certificates and finish up the pairing process you need to do one of the following actions.
 
 ## 1. Use OpenSSL to create the certificate
+You will need to install the correct [OpenSSL](https://github.com/openssl/openssl) version for your OS.
+After that you can create the certificate using the tool.
 
 ## 2. Run custom pairing python scripts 
 
-Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and the needed libraries, like the OpenSSL. Then go to the /tools folder of the source code.
-The script must be called with two parameters, host and path where to store the new certificates.
+Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and go to the root of the code directory with a command line or bash.  
+1. First we create a new virtual environment for python using the command ```python -m venv .venv```
+2. Then activate the venv with:
+   - On Unix or MacOS, using the bash shell: ```source /path/to/venv/bin/activate```
+   - On Unix or MacOS, using the csh shell: ```source /path/to/venv/bin/activate.csh```
+   - On Unix or MacOS, using the fish shell: ```source /path/to/venv/bin/activate.fish```
+   - On Windows using the Command Prompt: ```path\to\venv\Scripts\activate.bat```
+   - On Windows using PowerShell: ```path\to\venv\Scripts\Activate.ps1```
+3. Install needed packages with the command ```pip install -r requirements.txt```
+
+Now you are ready to execute the needed commands. With the virtual environment still activated, you can 
+execute the tools.  
+To create a new certificate execute the following command with the location for the certificates as an argument.
 
 Example: 
 ```
->python pair_with_nvidia.py 192.168.1.99 c:\games\gamestream\
+>python ./resources/tools/create_certificates.py c:\games\gamestream\
+```
+
+To pair with the gamestream server use the following command. Arguments are the Gamestreamserver host IP and the path
+to the certificates.
+
+Example: 
+```
+>python ./resources/tools/pair_with_gspc.py 192.168.1.99 c:\games\gamestream\
 ```
 
 When started, this tool will show a unique pincode which you need to enter in a dialog on your computer which is running 

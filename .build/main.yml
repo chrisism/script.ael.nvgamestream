@@ -119,6 +119,7 @@ stages:
               *.txt
               resources/**/*.*
               media/**/*.*
+              !script.akl.nvgamestream.egg-info
               !setup.*
               !MANIFEST.in
               !dist/**/*.*
