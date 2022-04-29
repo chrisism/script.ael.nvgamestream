@@ -1,6 +1,6 @@
 # Kodi Media Center language file
 # Addon Name: Advanced Kodi Launcher : Nvidia Gamestream plugin
-# Addon id: script.ael.nvgamestream
+# Addon id: script.akl.nvgamestream
 msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -36,6 +36,10 @@ msgstr "settings.xml"
 
 msgctxt "#30124"
 msgid "Suspend/resume Kodi screensaver"
+msgstr "settings.xml"
+
+msgctxt "#30125"
+msgid "Suspend/resume Kodi joystick engine"
 msgstr "settings.xml"
 
 msgctxt "#30129"

@@ -1,7 +1,7 @@
 import os
 import random 
 
-from ael.utils import io
+from akl.utils import io
 
 def random_string(length:int):
     return ''.join(random.choice([chr(i) for i in range(ord('a'),ord('z'))]) for _ in range(length))
@@ -33,6 +33,8 @@ class FakeFile(io.FileName):
         self.fakeContent = data_str       
 
     def write_fake(self, bytes):
+        if not isinstance(bytes, str):
+            bytes = bytes.decode('utf-8')
         self.fakeContent = self.fakeContent + bytes
 
     def open(self, mode):pass
