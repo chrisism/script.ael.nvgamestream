@@ -313,9 +313,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
             
         if io.is_android():
             if stream_client == "NVIDIA":
-                application = "com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity"
+                application = "com.nvidia.tegrazone3"
             elif stream_client == "MOONLIGHT":
-                application = "com.limelight/com.limelight.ShortcutTrampoline"
+                application = "com.limelight"
             return application
         
         return stream_client
@@ -336,11 +336,15 @@ class NvidiaGameStreamLauncher(LauncherABC):
                 server_id = self.get_server_id()
                 kwargs["intent"]  = "android.intent.action.VIEW"
                 kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
+                kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                kwargs["className"] = "com.nvidia.grid.UnifiedLaunchActivity"
             
             elif stream_client == "MOONLIGHT":
                 kwargs["intent"]   = "android.intent.action.MAIN"
                 kwargs["category"] = "android.intent.category.LAUNCHER"
-
+                kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                kwargs["className"] = "com.limelight.ShortcutTrampoline"
+            
                 arguments.append('Host $server$')
                 arguments.append('AppId $gstreamid$')
                 arguments.append('AppName "$gamestream_name$"')
