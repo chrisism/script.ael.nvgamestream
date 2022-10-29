@@ -89,14 +89,14 @@ class NvidiaGameStreamLauncher(LauncherABC):
         # APP
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
             {'NVIDIA': 'Nvidia', 'MOONLIGHT': 'Moonlight'}, 
-            self._wizard_check_if_selected_gamestream_client_exists, lambda pk, p: io.is_android())
+            self._wizard_check_if_selected_gamestream_client_exists, self._wizard_is_on_android)
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
             {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'},
-            None, lambda pk,p: not io.is_android())
+            None, self._wizard_is_not_on_android)
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Gamestream client jar',
-            1, self._builder_get_appbrowser_filter, None, lambda pk, p: not io.is_android())
+            1, self._builder_get_appbrowser_filter, None, self._wizard_is_not_on_android)
         wizard = kodi.WizardDialog_Keyboard(wizard, 'args', 'Additional arguments', 
-            None, lambda pk, p: not io.is_android())
+            None, self._wizard_is_on_android)
 
         # CONNECTION
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'dummy', 'Pairing with Gamestream PC',
@@ -220,6 +220,12 @@ class NvidiaGameStreamLauncher(LauncherABC):
         logger.debug('validate_gamestream_server_connection() Found correct gamestream server with id "{}" and hostname "{}"'.format(launcher['server_uuid'],launcher['server_hostname']))
 
         return input
+    
+    def _wizard_is_on_android(self, item_key, launcher):
+        return io.is_android()
+
+    def _wizard_is_not_on_android(self, item_key, launcher):
+        return not io.is_android()
 
     def _builder_get_edit_options(self) -> dict:
         streamClient = self.launcher_settings['application']
