@@ -89,23 +89,23 @@ class NvidiaGameStreamLauncher(LauncherABC):
         # APP
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
             {'NVIDIA': 'Nvidia', 'MOONLIGHT': 'Moonlight'}, 
-            self._wizard_check_if_selected_gamestream_client_exists, self._wizard_is_on_android)
+            self._wizard_check_if_selected_gamestream_client_exists, lambda pk, p: io.is_android())
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
             {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'},
-            None, self._wizard_is_not_on_android)
+            None, lambda pk, p: not io.is_android())
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Gamestream client jar',
-            1, self._builder_get_appbrowser_filter, None, self._wizard_is_not_on_android)
+            1, self._builder_get_appbrowser_filter, None, None, lambda pk, p: not io.is_android())
         wizard = kodi.WizardDialog_Keyboard(wizard, 'args', 'Additional arguments', 
-            None, self._wizard_is_on_android)
+            None, lambda pk, p: not io.is_android())
 
         # CONNECTION
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'dummy', 'Pairing with Gamestream PC',
             info_txt)        
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'cert_action', 'How to apply certificates', options)
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select location to store certificates', 
-            0, '', 'files',self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
+            0, '', 'files', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select certificates path', 
-            0, '', 'files',self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
+            0, '', 'files', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
 
         pair_txt =  'We are going to connect with the Gamestream PC.\n'
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
@@ -221,12 +221,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
         return input
     
-    def _wizard_is_on_android(self, item_key, launcher):
-        return io.is_android()
-
-    def _wizard_is_not_on_android(self, item_key, launcher):
-        return not io.is_android()
-
     def _builder_get_edit_options(self) -> dict:
         streamClient = self.launcher_settings['application']
         if streamClient == 'NVIDIA':
