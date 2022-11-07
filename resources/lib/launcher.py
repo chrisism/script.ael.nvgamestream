@@ -339,7 +339,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
                 kwargs["category"] = "android.intent.category.DEFAULT"
                 kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
                 kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                kwargs["className"] = "com.nvidia.grid.UnifiedLaunchActivity"
+                kwargs["className"] = "com.nvidia.gsPlayer.UnifiedLaunchActivity"
 
             elif stream_client == "MOONLIGHT":
                 kwargs["intent"]   = "android.intent.action.MAIN"
