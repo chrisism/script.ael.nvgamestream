@@ -32,8 +32,6 @@ from akl.launchers import LauncherABC
 from resources.lib.gamestream import GameStreamServer
 from resources.lib import crypto
 
-logger = logging.getLogger(__name__)
-
 # -------------------------------------------------------------------------------------------------
 # Launcher to use with a Nvidia Gamestream server connection.
 # -------------------------------------------------------------------------------------------------
@@ -63,14 +61,14 @@ class NvidiaGameStreamLauncher(LauncherABC):
     # Creates a new launcher using a wizard of dialogs. Called by parent build() method.
     #
     def _builder_get_wizard(self, wizard):    
-        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
-        logger.debug(f'NvidiaStreamScanner::_builder_get_wizard() OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
+        logging.debug(f'Has Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
+        logging.debug(f'Has PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
+        logging.debug(f'Has OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
-        info_txt  = 'To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
-        info_txt += 'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '
-        info_txt += 'You can always create them manually with external tools/websites.\n'
-        info_txt += 'Please read the documentation or wiki for details how to create them if needed.'
+        info_txt  = ('To pair with your Geforce Experience Computer we need to make use of valid certificates.\n',
+                    'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. ',
+                    'You can always create them manually with external tools/websites.\n',
+                    'Please read the documentation or wiki for details how to create them if needed.')
 
         options = {}
         options['IMPORT'] = 'Import existing (or create manually)'
@@ -92,9 +90,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
             self._wizard_check_if_selected_gamestream_client_exists, lambda pk, p: io.is_android())
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
             {'JAVA': 'Moonlight-PC (java)', 'EXE': 'Moonlight-Chrome (not supported yet)'},
-            None, lambda pk,p: not io.is_android())
+            None, lambda pk, p: not io.is_android())
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Gamestream client jar',
-            1, self._builder_get_appbrowser_filter, None, lambda pk, p: not io.is_android())
+            1, self._builder_get_appbrowser_filter, None, None, lambda pk, p: not io.is_android())
         wizard = kodi.WizardDialog_Keyboard(wizard, 'args', 'Additional arguments', 
             None, lambda pk, p: not io.is_android())
 
@@ -103,9 +101,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
             info_txt)        
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'cert_action', 'How to apply certificates', options)
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select location to store certificates', 
-            0, '', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
+            0, '', 'files', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select certificates path', 
-            0, '', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
+            0, '', 'files', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
 
         pair_txt =  'We are going to connect with the Gamestream PC.\n'
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
@@ -152,11 +150,11 @@ class NvidiaGameStreamLauncher(LauncherABC):
         return GameStreamServer(None, None).generatePincode()
 
     def _wizard_start_pairing_with_server(self, input, item_key, properties):
-        logger.info('Starting pairing process')
+        logging.info('Starting pairing process')
         certificates_path = io.FileName(properties['certificates_path'])
         pincode = properties[item_key]
 
-        logger.info('Starting pairing process')
+        logging.info('Starting pairing process')
         server = GameStreamServer(
             properties['server'], 
             certificates_path)
@@ -166,7 +164,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         progress_dialog.startProgress("Starting pairing process")
         paired = server.pairServer(pincode, progress_dialog)
         self.launcher_settings['ispaired'] = paired
-        logger.info(f"Finished pairing. Result paired: {paired}")
+        logging.info(f"Finished pairing. Result paired: {paired}")
         progress_dialog.endProgress()
         
         return pincode
@@ -213,14 +211,16 @@ class NvidiaGameStreamLauncher(LauncherABC):
             kodi.notify_warn('Could not connect to gamestream server')
             return input
 
-        launcher['server_id'] = 4 # not yet known what the origin is
+        launcher['server_id'] = 1 # not yet known what the origin is
         launcher['server_uuid'] = gs.get_uniqueid()
         launcher['server_hostname'] = gs.get_hostname()
 
-        logger.debug('validate_gamestream_server_connection() Found correct gamestream server with id "{}" and hostname "{}"'.format(launcher['server_uuid'],launcher['server_hostname']))
+        server_uuid = launcher['server_uuid']
+        host_name = launcher['server_hostname']
+        logging.debug(f'Found correct gamestream server with id "{server_uuid}" and hostname "{host_name}"')
 
         return input
-
+    
     def _builder_get_edit_options(self) -> dict:
         streamClient = self.launcher_settings['application']
         if streamClient == 'NVIDIA':
@@ -280,15 +280,16 @@ class NvidiaGameStreamLauncher(LauncherABC):
         current_path  = self.get_certificates_path().getPath()
         selected_path = kodi.browse(type=0, text='Select the path with valid certificates', preselected_path=current_path) 
         if selected_path is None or selected_path == current_path:
-            logger.debug('_change_certificates(): Selected path = NONE')
+            logging.debug('Selected certificates path = NONE')
             return
 
         validated_path = self._wizard_validate_nvidia_certificates(selected_path, 'certificates_path', self.launcher_settings)
         self.launcher_settings['certificates_path'] = validated_path
 
     def _update_server_info(self):
-        if not kodi.dialog_yesno('Are you sure you want to update all server info?'): return
-        self._wizard_validate_gamestream_server_connection(self.launcher_settings['server'],'server', self.launcher_settings)
+        if not kodi.dialog_yesno('Are you sure you want to update all server info?'): 
+            return
+        self._wizard_validate_gamestream_server_connection(self.launcher_settings['server'], 'server', self.launcher_settings)
       
     # ---------------------------------------------------------------------------------------------
     # Execution methods
@@ -313,9 +314,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
             
         if io.is_android():
             if stream_client == "NVIDIA":
-                application = "com.nvidia.tegrazone3/com.nvidia.grid.UnifiedLaunchActivity"
+                application = "com.nvidia.tegrazone3"
             elif stream_client == "MOONLIGHT":
-                application = "com.limelight/com.limelight.ShortcutTrampoline"
+                application = "com.limelight"
             return application
         
         return stream_client
@@ -335,12 +336,17 @@ class NvidiaGameStreamLauncher(LauncherABC):
             if stream_client == "NVIDIA":
                 server_id = self.get_server_id()
                 kwargs["intent"]  = "android.intent.action.VIEW"
+                kwargs["category"] = "android.intent.category.DEFAULT"
                 kwargs["dataURI"] = f"nvidia://stream/target/{server_id}/$gstreamid$"
-            
+                kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                kwargs["className"] = "com.nvidia.gsPlayer.UnifiedLaunchActivity"
+
             elif stream_client == "MOONLIGHT":
                 kwargs["intent"]   = "android.intent.action.MAIN"
                 kwargs["category"] = "android.intent.category.LAUNCHER"
-
+                kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                kwargs["className"] = "com.limelight.ShortcutTrampoline"
+            
                 arguments.append('Host $server$')
                 arguments.append('AppId $gstreamid$')
                 arguments.append('AppName "$gamestream_name$"')

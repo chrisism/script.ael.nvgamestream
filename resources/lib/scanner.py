@@ -107,9 +107,9 @@ class NvidiaStreamScanner(RomScannerStrategy):
             info_txt)        
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'cert_action', 'How to apply certificates', options)
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select location to store certificates', 
-            0, '', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
+            0, '', 'files', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_path', 'Select certificates path', 
-            0, '', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
+            0, '', 'files', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
 
         pair_txt =  'We are going to connect with the Gamestream PC.\n'
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
