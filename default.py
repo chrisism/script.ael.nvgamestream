@@ -148,18 +148,18 @@ def scan_for_roms(args):
     scanner.scan()
     progress_dialog.endProgress()
     
-    logger.debug('scan_for_roms(): Finished scanning')
+    logger.debug('Finished scanning')
     
     amount_dead = scanner.amount_of_dead_roms()
     if amount_dead > 0:
-        logger.info('scan_for_roms(): {} roms marked as dead'.format(amount_dead))
+        logger.info(f'{amount_dead} roms marked as dead')
         scanner.remove_dead_roms()
         
     amount_scanned = scanner.amount_of_scanned_roms()
     if amount_scanned == 0:
-        logger.info('scan_for_roms(): No roms scanned')
+        logger.info('No roms scanned')
     else:
-        logger.info('scan_for_roms(): {} roms scanned'.format(amount_scanned))
+        logger.info(f'{amount_scanned} roms scanned')
         scanner.store_scanned_roms()
         
     kodi.notify('ROMs scanning done')

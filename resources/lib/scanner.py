@@ -20,6 +20,7 @@ from __future__ import division
 import logging
 import typing
 import collections
+import json
 
 # --- Kodi packages --
 import xbmcgui
@@ -47,7 +48,8 @@ class GameStreamCandidate(ROMCandidateABC):
         rom.set_name(self.get_name())
         scanned_data = {
             'gstreamid': self.get_game_id(),
-            'gamestream_name': self.get_name() # so that we always have the original name
+            'gamestream_name': self.get_name(), # so that we always have the original name
+            'gstream_xml': json.dumps(self.game_data)
         }
         rom.set_scanned_data(scanned_data)
         return rom
@@ -259,7 +261,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         
         self.progress_dialog.updateProgress(80)
         num_games = len(games)
-        scanner_report.write('Gamestream scanner found {} games'.format(num_games))
+        scanner_report.write(f'Gamestream scanner found {num_games} games')
         
         self.progress_dialog.endProgress()
         return [*(GameStreamCandidate(g) for g in games)]
