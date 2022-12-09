@@ -277,9 +277,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
             
         self.progress_dialog.startProgress('Checking for dead ROMs ...', num_roms)
         
-        streamIds = set(streamableGame['ID'] for streamableGame in candidates)
         candidate_stream_ids = set(c.get_game_id() for c in candidates)
-        
         for rom in reversed(roms):
             stream_id = rom.get_scanned_data_element('gstreamid')
             logger.info(f'Searching stream ID#{stream_id}')
