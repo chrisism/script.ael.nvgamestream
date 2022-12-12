@@ -49,7 +49,9 @@ class GameStreamCandidate(ROMCandidateABC):
         scanned_data = {
             'gstreamid': self.get_game_id(),
             'gamestream_name': self.get_name(), # so that we always have the original name
-            'gstream_xml': json.dumps(self.game_data)
+            'gstream_xml': json.dumps(self.game_data),
+            'scanned_with': kodi.get_addon_id(),
+            'scanner_version': kodi.get_addon_version()
         }
         rom.set_scanned_data(scanned_data)
         return rom
