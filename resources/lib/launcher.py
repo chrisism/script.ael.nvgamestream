@@ -65,9 +65,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
         logging.debug(f'Has PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
         logging.debug(f'Has OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
-        info_txt  = ('To pair with your Geforce Experience Computer we need to make use of valid certificates.\n',
-                    'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. ',
-                    'You can always create them manually with external tools/websites.\n',
+        info_txt  = ('To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
+                    'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '
+                    'You can always create them manually with external tools/websites.\n'
                     'Please read the documentation or wiki for details how to create them if needed.')
 
         options = {}
