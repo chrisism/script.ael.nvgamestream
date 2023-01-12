@@ -18,7 +18,7 @@ import sys
 # AKL main imports
 from akl.utils import io
 
-from resources.lib import crypto
+from script_akl_nvgamestream.resources.lib import crypto
 
 logger = logging.getLogger(__name__)
 

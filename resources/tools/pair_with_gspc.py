@@ -4,7 +4,8 @@
 # Pairing with Nvidia Gamestream PC
 #
 # This tool must be called with two parameters, host and path where the certificates are found.
-# Example: >python pair_with_nvidia.py 192.168.1.99 c:\games\gamestream\
+# Example: >
+
 #
 # Certificate files should be named 'nvidia.crt' and 'nvidia.key'.
 #
@@ -21,7 +22,7 @@ import sys, os
 from akl.utils import io
 
 # Local modules
-from resources.lib.gamestream import GameStreamServer
+from script_akl_nvgamestream.resources.lib.gamestream import GameStreamServer
 
 def pair(host:str, path:str):
 
