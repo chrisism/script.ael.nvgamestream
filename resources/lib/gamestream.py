@@ -434,4 +434,4 @@ class GameStreamServer(object):
         if not addon_certificates_directory.exists():
             addon_certificates_directory.makedirs()
             
-        return addon_certificates_directory.getPath()
+        return addon_certificates_directory.getPathTranslated()

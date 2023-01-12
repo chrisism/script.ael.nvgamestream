@@ -76,6 +76,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         options[crypto.CREATE_WITH_PYOPENSSL] = f'Use OpenSSL library (Available: {"yes" if crypto.UTILS_OPENSSL_AVAILABLE else "no"}, DEPRECATED)'
         options[crypto.CREATE_WITH_OPENSSL]   = f'Execute OpenSSL command'
 
+        # wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None, None)
         wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
             self._wizard_try_to_resolve_path_to_nvidia_certificates)
         wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, 
