@@ -51,10 +51,11 @@ setup(
         "Operating System :: OS Independent"
     ],
     install_requires=[
-        "script.module.akl",
-        "cryptography",
-        "pycryptodomex",
-        "Kodistubs==19.0.3"
+        "script.module.akl==1.0.8",
+        "cryptography==36.0.1",
+        "pycryptodomex==3.14.1",
+        "pyopenssl==22.0.0", 
+        "requests==2.22.0"
     ],
     python_requires=">=3.8",
     entry_points = '''
