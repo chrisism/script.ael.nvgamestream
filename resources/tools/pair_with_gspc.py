@@ -16,13 +16,21 @@
 #
 # pip install -r requirements
 #
-#from __future__ import unicode_literals
 import sys, os
 # AKL main imports
 from akl.utils import io
 
+def _import(name: str, *args, **kwargs):
+    if name.startswith('resources.lib.'):
+        name = name.replace('resources.lib.', 'script_akl_nvgamestream.resources.lib.')
+    return original_import(name, *args, **kwargs)
+
+import builtins
+original_import = builtins.__import__
+builtins.__import__ = _import
+
 # Local modules
-from script_akl_nvgamestream.resources.lib.gamestream import GameStreamServer
+from resources.lib.gamestream import GameStreamServer
 
 def pair(host:str, path:str):
 
