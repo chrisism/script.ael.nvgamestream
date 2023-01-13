@@ -29,7 +29,10 @@ import xml.etree.ElementTree as ET
 from akl.utils import net, io, text, kodi
 
 # Local modules
-import resources.lib.crypto as crypto
+try:
+    import resources.lib.crypto as crypto
+except:
+    import script_akl_nvgamestream.resources.lib.crypto as crypto
 
 # #################################################################################################
 # #################################################################################################
