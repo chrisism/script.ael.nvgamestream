@@ -65,9 +65,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
         logging.debug(f'Has PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
         logging.debug(f'Has OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
      
-        info_txt  = ('To pair with your Geforce Experience Computer we need to make use of valid certificates.\n',
-                    'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. ',
-                    'You can always create them manually with external tools/websites.\n',
+        info_txt  = ('To pair with your Geforce Experience Computer we need to make use of valid certificates.\n'
+                    'Depending on OS and libraries we might not be able to create certificates directly from within Kodi. '
+                    'You can always create them manually with external tools/websites.\n'
                     'Please read the documentation or wiki for details how to create them if needed.')
 
         options = {}
@@ -76,6 +76,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         options[crypto.CREATE_WITH_PYOPENSSL] = f'Use OpenSSL library (Available: {"yes" if crypto.UTILS_OPENSSL_AVAILABLE else "no"}, DEPRECATED)'
         options[crypto.CREATE_WITH_OPENSSL]   = f'Execute OpenSSL command'
 
+        # wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None, None)
         wizard = kodi.WizardDialog_Dummy(wizard, 'certificates_path', None,
             self._wizard_try_to_resolve_path_to_nvidia_certificates)
         wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, 

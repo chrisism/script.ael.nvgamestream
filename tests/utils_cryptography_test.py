@@ -65,8 +65,8 @@ class Test_cryptography_test(unittest.TestCase):
         # arrange
         output_dir = io.FileName(self.TEST_OUTPUT_DIR, isdir=True)
         cert_name = "NVIDIA GameStream Client"
-        cert_file_path = output_dir.pjoin('nvidia_01.crt')
-        key_file_path = output_dir.pjoin('nvidia_02.key')
+        cert_file_path = output_dir.pjoin('nvidia_09.crt')
+        key_file_path = output_dir.pjoin('nvidia_09.key')
         
         # act
 
@@ -159,6 +159,6 @@ class Test_cryptography_test(unittest.TestCase):
         # target.AESCipher
 
         # arrange
-        
+
 if __name__ == '__main__':
     unittest.main()

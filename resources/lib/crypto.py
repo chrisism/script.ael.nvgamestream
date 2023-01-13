@@ -23,6 +23,8 @@ import binascii
 from datetime import timedelta
 from datetime import datetime
 
+from os import urandom
+
 try:
     from cryptography import x509
     from cryptography.x509.oid import NameOID
@@ -236,7 +238,13 @@ def sign_data(data, key_certificate):
     return sign
 
 def randomBytes(size):
-    return get_random_bytes(size)
+    try:
+        return get_random_bytes(size)
+    except:
+        logger.exception(f"Failure generating random bytes")
+    
+    return urandom(size)
+
 
 class HashAlgorithm(object):
     def __init__(self, shaVersion):
