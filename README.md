@@ -29,7 +29,9 @@ After that you can create the certificate using the tool.
 
 ## 2. Run custom pairing python scripts 
 
-Download the source code for AKL from github and place it on your computer. Make sure you have Python installed and go to the root of the code directory with a command line or bash.  
+You can install the gamestream tools module from our pip own source. Details about how to connect to our pip feed can be read here: https://dev.azure.com/jnpro/AKL/_artifacts/feed/akl_libs/connect/pip. You will need it in the steps below.
+
+First of all, make sure you have Python installed. Then go to a newly created directory with a command line or bash.  
 1. First we create a new virtual environment for python using the command ```python -m venv .venv```
 2. Then activate the venv with:
    - On Unix or MacOS, using the bash shell: ```source /path/to/venv/bin/activate```
@@ -37,7 +39,8 @@ Download the source code for AKL from github and place it on your computer. Make
    - On Unix or MacOS, using the fish shell: ```source /path/to/venv/bin/activate.fish```
    - On Windows using the Command Prompt: ```path\to\venv\Scripts\activate.bat```
    - On Windows using PowerShell: ```path\to\venv\Scripts\Activate.ps1```
-3. Install needed packages with the command ```pip install -r requirements.txt```
+3. Follow the instructions on https://dev.azure.com/jnpro/AKL/_artifacts/feed/akl_libs/connect/pip and create the pip.config or pip.ini with our feed url. **NOTICE** Change the index-url= to extra-index-url= in the file to make sure all public available python modules are retrieved from the official pypi index.
+4. Install the module with the command ```pip install script.akl.nvgamestream```. If you want a specific version you can go to https://dev.azure.com/jnpro/AKL/_artifacts/feed/akl_libs and select the module and version you want. The pip command will be shown there.
 
 Now you are ready to execute the needed commands. With the virtual environment still activated, you can 
 execute the tools.  
@@ -45,7 +48,7 @@ To create a new certificate execute the following command with the location for 
 
 Example: 
 ```
->python ./resources/tools/create_certificates.py c:\games\gamestream\
+>create_certificates c:\games\gamestream\
 ```
 
 To pair with the gamestream server use the following command. Arguments are the Gamestreamserver host IP and the path
@@ -53,7 +56,7 @@ to the certificates.
 
 Example: 
 ```
->python ./resources/tools/pair_with_gspc.py 192.168.1.99 c:\games\gamestream\
+>pair_with_gspc 192.168.1.99 c:\games\gamestream\
 ```
 
 When started, this tool will show a unique pincode which you need to enter in a dialog on your computer which is running 
