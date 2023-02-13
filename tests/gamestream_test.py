@@ -1,4 +1,3 @@
-from cmath import exp
 import unittest, os
 import unittest.mock
 from unittest.mock import MagicMock, patch
@@ -98,12 +97,27 @@ class Test_gamestream(unittest.TestCase):
         certificateKeyBytesMock.return_value = self.read_ascii_file(f"{self.TEST_ASSETS_DIR}/certs/nvidia.key", encoding="ascii")
         random_mock.return_value = binascii.unhexlify("50ca25d03b4ac53368875b9a1bfb50cc")
 
-        server = GameStreamServer('192.168.0.5', addon_dir, debug_mode = True)
+        gs_info = GameStreamServer.create_new_connection_info("GameServer", '192.168.0.5')
+        gs_info["cert_file"] = f"{self.TEST_ASSETS_DIR}/certs/nvidia.crt"
+        gs_info["cert_key_file"] = f"{self.TEST_ASSETS_DIR}/certs/nvidia.key"
+        server = GameStreamServer(gs_info, debug_mode = True)
         
         # act
         server.connect()
         pincode = server.generatePincode()
         paired = server.pairServer(pincode)
+
+        connection_info = {
+            "name": server.name,
+            "unique_id": server.unique_id,
+            "host": server.host,
+            "paired": server.is_paired(),
+            "cert_file": server.certificate_file_path.getPath(),
+            "cert_key_file": server.certificate_key_file_path.getPath()
+        }
+
+        connection_info_file = io.FileName(f"{self.TEST_ASSETS_DIR}/certs/{server.name}.conf")
+        connection_info_file.writeJson(connection_info)
 
         # assert
         self.assertTrue(paired)
