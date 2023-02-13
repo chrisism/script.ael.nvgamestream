@@ -39,7 +39,14 @@ class Test_gamestream(unittest.TestCase):
         
         # arrange
         http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16'), 200
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
+        connection_info = {
+            "name": "test",
+            "host": "192.168.0.555",
+            "unique_id": 124,
+            "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
+            "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
+        }
+        server = GameStreamServer(connection_info, debug_mode=True)
         
         # act
         actual = server.connect()
@@ -53,7 +60,14 @@ class Test_gamestream(unittest.TestCase):
          
         # arrange
         http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_response.xml", encoding='utf-16'), 200
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR), debug_mode=True)
+        connection_info = {
+            "name": "test",
+            "host": "192.168.0.555",
+            "unique_id": 124,
+            "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
+            "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
+        }
+        server = GameStreamServer(connection_info, debug_mode=True)
         expected = '7.1.402.0'
         expectedMajor = 7
 
@@ -70,8 +84,14 @@ class Test_gamestream(unittest.TestCase):
 
         # arrange        
         http_mock.return_value = self.read_file(self.TEST_ASSETS_DIR + "/gamestreamserver_apps.xml"), 200
-        server = GameStreamServer('192.168.0.555', io.FileName(self.TEST_ASSETS_DIR))
-
+        connection_info = {
+            "name": "test",
+            "host": "192.168.0.555",
+            "unique_id": 124,
+            "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
+            "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
+        }
+        server = GameStreamServer(connection_info, debug_mode=True)
         expected = 18
 
         # act
@@ -147,7 +167,14 @@ class Test_gamestream(unittest.TestCase):
         # arrange
         addon_dir = io.FileName(f"{self.TEST_ASSETS_DIR}/certs/")
         expected  = self.read_ascii_file(f"{self.TEST_ASSETS_DIR}/certs/nvidia.crt", encoding="ascii")
-        server = GameStreamServer('0.0.0.0', addon_dir, debug_mode = True)
+        connection_info = {
+            "name": "test",
+            "host": "0.0.0.0",
+            "unique_id": 124,
+            "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
+            "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
+        }
+        server = GameStreamServer(connection_info, debug_mode=True)
         
         # act
         actual = server.get_certificate_bytes()
