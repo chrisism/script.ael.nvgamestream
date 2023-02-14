@@ -10,9 +10,8 @@
   </extension>
   <extension point="xbmc.addon.metadata">
     <summary lang="en_GB">Nvidia Gamestream scanner and launcher for AKL plugin.</summary>
-    <description lang="en_GB">
-    This module can be used as a scanner and launcher plugin for AKL. It can scan and launch games from your
-    Nvidia Gamestream library. This plugin needs and is executed from within AKL.
+    <description lang="en_GB">This module can be used as a scanner and launcher plugin for AKL. It can scan and launch games from your
+Nvidia Gamestream library. This plugin needs and is executed from within AKL.
     </description>
     <platform>all</platform>
     <license>GNU General Public License version 2</license>
