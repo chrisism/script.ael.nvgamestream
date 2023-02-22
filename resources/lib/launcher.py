@@ -146,17 +146,17 @@ class NvidiaGameStreamLauncher(LauncherABC):
             connection_path = gs.store_connection_info()
             self.launcher_settings["selected_connection"] = connection_path
  
-        self.launcher_settings.pop("ispaired")
-        self.launcher_settings.pop("pincode")
-        self.launcher_settings.pop("dummy")
-        self.launcher_settings.pop("certificates_paths")
-        self.launcher_settings.pop("cert_action")
-        self.launcher_settings.pop("server_uuid")
-        self.launcher_settings.pop("host")
-        self.launcher_settings.pop("connection_name")
-        self.launcher_settings.pop("unique_id")
-        self.launcher_settings.pop("cert_file")
-        self.launcher_settings.pop("cert_key_file")
+        self.launcher_settings.pop("ispaired", None)
+        self.launcher_settings.pop("pincode", None)
+        self.launcher_settings.pop("dummy", None)
+        self.launcher_settings.pop("certificates_paths", None)
+        self.launcher_settings.pop("cert_action", None)
+        self.launcher_settings.pop("server_uuid", None)
+        self.launcher_settings.pop("host", None)
+        self.launcher_settings.pop("connection_name", None)
+        self.launcher_settings.pop("unique_id", None)
+        self.launcher_settings.pop("cert_file", None)
+        self.launcher_settings.pop("cert_key_file", None)
        
         return True
 

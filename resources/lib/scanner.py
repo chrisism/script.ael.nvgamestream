@@ -154,17 +154,17 @@ class NvidiaStreamScanner(RomScannerStrategy):
             connection_path = gs.store_connection_info()
             self.scanner_settings["selected_connection"] = connection_path
  
-        self.scanner_settings.pop("ispaired")
-        self.scanner_settings.pop("pincode")
-        self.scanner_settings.pop("dummy")
-        self.scanner_settings.pop("certificates_paths")
-        self.scanner_settings.pop("cert_action")
-        self.scanner_settings.pop("server_uuid")
-        self.scanner_settings.pop("host")
-        self.scanner_settings.pop("connection_name")
-        self.scanner_settings.pop("unique_id")
-        self.scanner_settings.pop("cert_file")
-        self.scanner_settings.pop("cert_key_file")
+        self.scanner_settings.pop("ispaired", None)
+        self.scanner_settings.pop("pincode", None)
+        self.scanner_settings.pop("dummy", None)
+        self.scanner_settings.pop("certificates_paths", None)
+        self.scanner_settings.pop("cert_action", None)
+        self.scanner_settings.pop("server_uuid", None)
+        self.scanner_settings.pop("host", None)
+        self.scanner_settings.pop("connection_name", None)
+        self.scanner_settings.pop("unique_id", None)
+        self.scanner_settings.pop("cert_file", None)
+        self.scanner_settings.pop("cert_key_file", None)
        
         return True
     
