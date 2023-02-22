@@ -123,7 +123,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         wizard = kodi.WizardDialog_FileBrowse(wizard, 'certificates_paths', 'Select location to store certificates', 
             0, '', 'files', self._wizard_create_certificates, self._wizard_wants_to_create_certificate) 
         wizard = helpers.WizardDialog_FileBrowseMultiple(wizard, 'certificates_paths', 'Select certificate files', 
-            1, '', 'files', self._wizard_validate_nvidia_certificates, self._wizard_wants_to_import_certificate) 
+            1, '', 'files', self._wizard_validate_certificates, self._wizard_wants_to_import_certificate) 
 
         # if needed to be paired  
         pair_txt =  'We are going to connect with the Gamestream PC.\n'
