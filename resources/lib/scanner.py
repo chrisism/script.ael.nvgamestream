@@ -81,6 +81,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         if "selected_connection" in self.scanner_settings and \
             self.scanner_settings["selected_connection"]:
             connection_info_file = io.FileName(self.scanner_settings["selected_connection"])
+            logging.info(f"Loading settings from {connection_info_file.getPath()}")
             self.connection_info = connection_info_file.readJson()
             self.scanner_settings.update(self.connection_info)
 
@@ -145,14 +146,15 @@ class NvidiaStreamScanner(RomScannerStrategy):
         return wizard
       
     def _configure_post_wizard_hook(self):
-        store_connection = False
         if self.scanner_settings["selected_connection"] == "NONE":
-            store_connection = True
-
-        if store_connection:
             gs = self._get_gamestream_server_from_scanner_settings(self.scanner_settings)
             connection_path = gs.store_connection_info()
             self.scanner_settings["selected_connection"] = connection_path
+        else:
+            connection_info_file = io.FileName(self.scanner_settings["selected_connection"])
+            gs = GameStreamServer.load_connection(connection_info_file)
+            gs.update_connection_info(self.scanner_settings)
+            connection_path = gs.store_connection_info()
  
         self.scanner_settings.pop("ispaired", None)
         self.scanner_settings.pop("pincode", None)
@@ -160,6 +162,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
         self.scanner_settings.pop("certificates_paths", None)
         self.scanner_settings.pop("cert_action", None)
         self.scanner_settings.pop("server_uuid", None)
+        self.scanner_settings.pop("server_name", None)
         self.scanner_settings.pop("host", None)
         self.scanner_settings.pop("connection_name", None)
         self.scanner_settings.pop("unique_id", None)
@@ -245,11 +248,14 @@ class NvidiaStreamScanner(RomScannerStrategy):
 
         properties['server_id'] = 1 # not yet known what the origin is
         properties['server_uuid'] = gs.get_uniqueid()
-        properties['connection_name'] = gs.get_hostname()
+        properties['server_name'] = gs.get_hostname()
         properties['unique_id'] = gs.get_client_id()
 
+        if not "connection_name" in properties or not properties['connection_name']:  
+            properties['connection_name'] = gs.get_hostname()
+        
         server_uuid = properties['server_uuid']
-        host_name = properties['connection_name']
+        host_name = properties['server_name']
         logging.debug(f'Found correct gamestream server with id "{server_uuid}" and hostname "{host_name}"')
 
         return input
@@ -296,8 +302,8 @@ class NvidiaStreamScanner(RomScannerStrategy):
             return
         self.scanner_settings['unique_id'] = uid
         
-    def _change_certificates(self):
 
+    def _change_certificates(self):
         dialog = kodi.ListDialog()
         selected_idx = dialog.select("Change certificates",[
             f"Certificate file: {self.scanner_settings['cert_file']}",

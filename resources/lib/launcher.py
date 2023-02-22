@@ -54,6 +54,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         if "selected_connection" in self.launcher_settings \
             and self.launcher_settings["selected_connection"]:
             connection_info_file = io.FileName(self.launcher_settings["selected_connection"])
+            logging.info(f"Loading settings from {connection_info_file.getPath()}")
             self.connection_info = connection_info_file.readJson()
             self.launcher_settings.update(self.connection_info)
 
@@ -136,22 +137,23 @@ class NvidiaGameStreamLauncher(LauncherABC):
         return wizard
         
     def _build_post_wizard_hook(self):
-        store_connection = False
         if self.launcher_settings["selected_connection"] == "NONE":
-            store_connection = True
-
-        if store_connection:
-
             gs = self._get_gamestream_server_from_launcher_settings(self.launcher_settings)
             connection_path = gs.store_connection_info()
             self.launcher_settings["selected_connection"] = connection_path
- 
+        else:
+            connection_info_file = io.FileName(self.launcher_settings["selected_connection"])
+            gs = GameStreamServer.load_connection(connection_info_file)
+            gs.update_connection_info(self.launcher_settings)
+            connection_path = gs.store_connection_info()
+        
         self.launcher_settings.pop("ispaired", None)
         self.launcher_settings.pop("pincode", None)
         self.launcher_settings.pop("dummy", None)
         self.launcher_settings.pop("certificates_paths", None)
         self.launcher_settings.pop("cert_action", None)
         self.launcher_settings.pop("server_uuid", None)
+        self.launcher_settings.pop("server_name", None)
         self.launcher_settings.pop("host", None)
         self.launcher_settings.pop("connection_name", None)
         self.launcher_settings.pop("unique_id", None)
@@ -253,6 +255,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
         properties['server_id'] = 1 # not yet known what the origin is
         properties['server_uuid'] = gs.get_uniqueid()
+        properties['server_name'] = gs.get_hostname()
         properties['connection_name'] = gs.get_hostname()
         properties['unique_id'] = gs.get_client_id()
 
@@ -349,7 +352,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
         self.launcher_settings['unique_id'] = uid
         
     def _change_certificates(self):
-
         dialog = kodi.ListDialog()
         selected_idx = dialog.select("Change certificates",[
             f"Certificate file: {self.launcher_settings['cert_file']}",
@@ -401,7 +403,9 @@ class NvidiaGameStreamLauncher(LauncherABC):
         connection_info = GameStreamServer.create_new_connection_info(host_name, host)
         if "unique_id" in properties:
             connection_info["unique_id"] = properties["unique_id"] 
-        
+        if "server_name" in properties:
+            connection_info["server_name"] = properties["server_name"]
+
         if "certificates_paths" in properties and host_name != 'test':
             certificate_paths = properties["certificates_paths"]
             for cert_file in certificate_paths:
@@ -455,7 +459,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
         # java application selected (moonlight-pc)
         if '.jar' in stream_client:
             arguments.append('-jar "$application$"')
-            arguments.append('-host $server$')
+            arguments.append('-host $host$')
             arguments.append('-fs')
             arguments.append('-app "$gamestream_name$"')
 
@@ -474,10 +478,10 @@ class NvidiaGameStreamLauncher(LauncherABC):
                 kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
                 kwargs["className"] = "com.limelight.ShortcutTrampoline"
             
-                arguments.append('Host $server$')
+                arguments.append('Host $host$')
                 arguments.append('AppId $gstreamid$')
                 arguments.append('AppName "$gamestream_name$"')
-                arguments.append('PcName "$connection_name$"')
+                arguments.append('PcName "$server_name$"')
                 arguments.append('UUID $server_uuid$')
                 arguments.append(f'UniqueId {text.misc_generate_random_SID()}')  
 

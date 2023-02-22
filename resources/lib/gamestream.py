@@ -46,6 +46,8 @@ class GameStreamServer(object):
         self.name = connection_info["name"]
         self.host = connection_info["host"]
         self.unique_id = connection_info["unique_id"]
+        self.server_uuid = connection_info["server_uuid"]
+        self.server_name = connection_info["server_name"]
         self.debug_mode = debug_mode
         self.server_info = None
 
@@ -126,12 +128,16 @@ class GameStreamServer(object):
         return text.VersionNumber(appVersion.text)
     
     def get_uniqueid(self):
-        uniqueid = self.server_info.find('uniqueid').text
-        return uniqueid
-    
+        if self.server_info:
+            uniqueid = self.server_info.find('uniqueid').text
+            return uniqueid
+        return self.server_uuid
+
     def get_hostname(self):
-        hostname = self.server_info.find('hostname').text
-        return hostname
+        if self.server_info:
+            hostname = self.server_info.find('hostname').text
+            return hostname
+        return self.server_name
 
     def generatePincode(self):
         i1 = random.randint(1, 9)
@@ -396,13 +402,22 @@ class GameStreamServer(object):
             self.certificate_key_file_path,
             create_type)
 
+    def update_connection_info(self, properties):
+        self.name = properties["name"]
+        self.host = properties["host"]
+        self.unique_id = properties["unique_id"]
+        self.server_uuid = properties["server_uuid"]
+        self.server_name = properties["server_name"]
+        self.certificate_file_path = io.FileName(properties["cert_file"])
+        self.certificate_key_file_path = io.FileName(properties["cert_key_file"])
+
     def store_connection_info(self):
         connection_info = {
             "name": self.name,
             "unique_id": self.unique_id,
             "server_uuid": self.get_uniqueid(),
+            "server_name": self.get_hostname(),
             "host": self.host,
-            "paired": self.is_paired(),
             "cert_file": self.certificate_file_path.getPath(),
             "cert_key_file": self.certificate_key_file_path.getPath()
         }
@@ -417,8 +432,8 @@ class GameStreamServer(object):
             "name": name,
             "unique_id": str(random.getrandbits(16)),
             "server_uuid": "",
+            "server_name": name,
             "host": host,
-            "paired": False,
             "cert_file": "",
             "cert_key_file": ""
         }
