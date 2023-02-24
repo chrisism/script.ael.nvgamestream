@@ -42,6 +42,8 @@ class Test_gamestream(unittest.TestCase):
         connection_info = {
             "name": "test",
             "host": "192.168.0.555",
+            "server_uuid": 'aabb13',
+            "server_name": 'TestServer',
             "unique_id": 124,
             "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
             "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
@@ -63,6 +65,8 @@ class Test_gamestream(unittest.TestCase):
         connection_info = {
             "name": "test",
             "host": "192.168.0.555",
+            "server_uuid": 'aabb13',
+            "server_name": 'TestServer',
             "unique_id": 124,
             "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
             "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
@@ -87,6 +91,8 @@ class Test_gamestream(unittest.TestCase):
         connection_info = {
             "name": "test",
             "host": "192.168.0.555",
+            "server_uuid": 'aabb13',
+            "server_name": 'TestServer',
             "unique_id": 124,
             "cert_file": self.TEST_ASSETS_DIR + '/nvidia.crt',
             "cert_key_file": self.TEST_ASSETS_DIR + '/nvidia.key'
@@ -130,6 +136,8 @@ class Test_gamestream(unittest.TestCase):
         connection_info = {
             "name": server.name,
             "unique_id": server.unique_id,
+            "server_uuid": 'aabb13',
+            "server_name": 'TestServer',
             "host": server.host,
             "paired": server.is_paired(),
             "cert_file": server.certificate_file_path.getPath(),
@@ -169,6 +177,8 @@ class Test_gamestream(unittest.TestCase):
         connection_info = {
             "name": "test",
             "host": "0.0.0.0",
+            "server_uuid": 'aabb13',
+            "server_name": 'TestServer',
             "unique_id": 124,
             "cert_file": self.TEST_ASSETS_DIR + '/certs/nvidia.crt',
             "cert_key_file": self.TEST_ASSETS_DIR + '/certs/nvidia.key'
