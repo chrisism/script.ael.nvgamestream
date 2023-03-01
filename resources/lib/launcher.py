@@ -480,8 +480,8 @@ class NvidiaGameStreamLauncher(LauncherABC):
             
                 arguments.append('Host $host$')
                 arguments.append('AppId $gstreamid$')
-                arguments.append('AppName "$gamestream_name$"')
-                arguments.append('PcName "$server_name$"')
+                arguments.append('AppName $gamestream_name$')
+                arguments.append('PcName $server_name$')
                 arguments.append('UUID $server_uuid$')
                 arguments.append(f'UniqueId {text.misc_generate_random_SID()}')  
 
