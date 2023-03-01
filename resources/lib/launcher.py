@@ -474,7 +474,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
             elif stream_client == "MOONLIGHT":
                 kwargs["intent"]   = "android.intent.action.MAIN"
-                kwargs["category"] = "android.intent.category.LAUNCHER"
+                kwargs["category"] = "android.intent.category.DEFAULT" #.LAUNCHER"
                 kwargs["flags"] = "270532608" #  FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
                 kwargs["className"] = "com.limelight.ShortcutTrampoline"
             

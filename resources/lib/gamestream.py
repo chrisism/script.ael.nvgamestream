@@ -23,6 +23,7 @@ from os.path import expanduser
 import binascii
 import uuid
 import random
+import json
 import xml.etree.ElementTree as ET
 
 # --- AKL packages ---
@@ -403,13 +404,23 @@ class GameStreamServer(object):
             create_type)
 
     def update_connection_info(self, properties):
-        self.name = properties["name"]
-        self.host = properties["host"]
-        self.unique_id = properties["unique_id"]
-        self.server_uuid = properties["server_uuid"]
-        self.server_name = properties["server_name"]
-        self.certificate_file_path = io.FileName(properties["cert_file"])
-        self.certificate_key_file_path = io.FileName(properties["cert_key_file"])
+        if 'connection_name' in properties:
+            self.name = properties["connection_name"]
+        elif 'name' in properties:
+            self.name = properties["name"]
+        
+        if "host" in properties:
+            self.host = properties["host"]
+        if "unique_id" in properties:
+            self.unique_id = properties["unique_id"]
+        if "server_uuid" in properties:
+            self.server_uuid = properties["server_uuid"]
+        if "server_name" in properties:
+            self.server_name = properties["server_name"]
+        if "cert_file" in properties:
+            self.certificate_file_path = io.FileName(properties["cert_file"])
+        if "cert_key_file" in properties:
+            self.certificate_key_file_path = io.FileName(properties["cert_key_file"])
 
     def store_connection_info(self):
         connection_info = {
@@ -421,8 +432,8 @@ class GameStreamServer(object):
             "cert_file": self.certificate_file_path.getPath(),
             "cert_key_file": self.certificate_key_file_path.getPath()
         }
-        addon_data_dir = kodi.getAddonDir()
-        connection_info_file = addon_data_dir.pjoin(f"{self.name}.conf")
+        
+        connection_info_file = io.FileName(f"special://userdata/addon_data/{kodi.get_addon_id()}/{self.name}.conf")
         connection_info_file.writeJson(connection_info)
         return connection_info_file.getPath()
 

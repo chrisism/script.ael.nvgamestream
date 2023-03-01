@@ -103,10 +103,9 @@ class NvidiaStreamScanner(RomScannerStrategy):
         
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'selected_connection', 
             'Select configured connection', self._wizard_get_available_connections())
-
+        
+        wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, self._wizard_generate_pair_pincode)
         # If selected to create a new connection
-        wizard = kodi.WizardDialog_Dummy(wizard, 'pincode', None, 
-            self._wizard_generate_pair_pincode, self._wizard_creating_new_connection)
         wizard = kodi.WizardDialog_Dummy(wizard, 'unique_id', None, 
             self._wizard_generate_connection_uid, self._wizard_creating_new_connection)
             
@@ -154,6 +153,7 @@ class NvidiaStreamScanner(RomScannerStrategy):
             connection_info_file = io.FileName(self.scanner_settings["selected_connection"])
             gs = GameStreamServer.load_connection(connection_info_file)
             gs.update_connection_info(self.scanner_settings)
+            gs.connect()
             connection_path = gs.store_connection_info()
  
         self.scanner_settings.pop("ispaired", None)
