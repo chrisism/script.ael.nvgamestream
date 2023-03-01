@@ -46,8 +46,8 @@ class GameStreamServer(object):
         self.name = connection_info["name"]
         self.host = connection_info["host"]
         self.unique_id = connection_info["unique_id"]
-        self.server_uuid = connection_info["server_uuid"]
-        self.server_name = connection_info["server_name"]
+        self.server_uuid = connection_info["server_uuid"] if "server_uuid" in connection_info else None
+        self.server_name = connection_info["server_name"] if "server_name" in connection_info else None
         self.debug_mode = debug_mode
         self.server_info = None
 
