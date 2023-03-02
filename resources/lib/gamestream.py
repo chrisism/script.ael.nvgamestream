@@ -23,6 +23,7 @@ from os.path import expanduser
 import binascii
 import uuid
 import random
+import json
 import xml.etree.ElementTree as ET
 
 # --- AKL packages ---
@@ -41,21 +42,19 @@ except:
 # #################################################################################################
 class GameStreamServer(object):
     
-    def __init__(self, host:str, certificates_path:io.FileName, debug_mode = False):
-        self.host = host
-        self.unique_id = random.getrandbits(16)
+    #def __init__(self, host:str, connection_info_path:io.FileName, debug_mode = False):
+    def __init__(self, connection_info: dict, debug_mode = False):
+        self.name = connection_info["name"]
+        self.host = connection_info["host"]
+        self.unique_id = connection_info["unique_id"]
+        self.server_uuid = connection_info["server_uuid"] if "server_uuid" in connection_info else None
+        self.server_name = connection_info["server_name"] if "server_name" in connection_info else None
         self.debug_mode = debug_mode
         self.server_info = None
 
-        if certificates_path:
-            self.certificates_path = certificates_path
-            self.certificate_file_path = self.certificates_path.pjoin('nvidia.crt')
-            self.certificate_key_file_path = self.certificates_path.pjoin('nvidia.key')
-        else:
-            self.certificates_path = io.FileName('')
-            self.certificate_file_path = io.FileName('')
-            self.certificate_key_file_path = io.FileName('')
-
+        self.certificate_file_path = io.FileName(connection_info["cert_file"])
+        self.certificate_key_file_path = io.FileName(connection_info["cert_key_file"])
+        
         logging.debug('Using certificate key file {}'.format(self.certificate_key_file_path.getPath()))
         logging.debug('Using certificate file {}'.format(self.certificate_file_path.getPath()))
 
@@ -73,10 +72,7 @@ class GameStreamServer(object):
             for key, value in parameters.items():
                 url = url + f"&{key}={value}"
 
-        if self.certificates_path.getPath() != '' and \
-            self.certificate_key_file_path.exists() and \
-            self.certificate_file_path.exists():
-            
+        if self.certificate_key_file_path.exists() and self.certificate_file_path.exists():
             key_file  = self.certificate_key_file_path.getPathTranslated()
             cert_file = self.certificate_file_path.getPathTranslated()
             page_data, http_code = net.get_URL(url, verify_ssl=False, cert=(cert_file, key_file))
@@ -125,17 +121,24 @@ class GameStreamServer(object):
 
         return self.server_info.attrib['status_code'] == '200'
 
+    def get_client_id(self):
+        return self.unique_id
+
     def get_server_version(self) -> text.VersionNumber:
         appVersion = self.server_info.find('appversion')
         return text.VersionNumber(appVersion.text)
     
     def get_uniqueid(self):
-        uniqueid = self.server_info.find('uniqueid').text
-        return uniqueid
-    
+        if self.server_info:
+            uniqueid = self.server_info.find('uniqueid').text
+            return uniqueid
+        return self.server_uuid
+
     def get_hostname(self):
-        hostname = self.server_info.find('hostname').text
-        return hostname
+        if self.server_info:
+            hostname = self.server_info.find('hostname').text
+            return hostname
+        return self.server_name
 
     def generatePincode(self):
         i1 = random.randint(1, 9)
@@ -390,27 +393,7 @@ class GameStreamServer(object):
         if self.certificate_file_path.exists() and self.certificate_key_file_path.exists():
             logging.debug(' Certificate files exist. Done')
             return True
-
-        certificate_files = self.certificates_path.scanFilesInPath('*.crt')
-        key_files = self.certificates_path.scanFilesInPath('*.key')
-
-        if len(certificate_files) < 1:
-            logging.warning('No .crt files found at given location.')
-            return False
-
-        if not self.certificate_file_path.exists():
-            logging.debug('Copying .crt file to nvidia.crt')
-            certificate_files[0].copy(self.certificate_file_path)
-
-        if len(key_files) < 1:
-            logging.warning('No .key files found at given location.')
-            return False
-
-        if not self.certificate_key_file_path.exists():
-            logging.debug('Copying .key file to nvidia.key')
-            key_files[0].copy(self.certificate_key_file_path)
-
-        return True
+        return False
 
     def create_certificates(self, create_type = None) -> bool:
         logging.info('Creating self signed client certificate')
@@ -420,21 +403,63 @@ class GameStreamServer(object):
             self.certificate_key_file_path,
             create_type)
 
+    def update_connection_info(self, properties):
+        if 'connection_name' in properties:
+            self.name = properties["connection_name"]
+        elif 'name' in properties:
+            self.name = properties["name"]
+        
+        if "host" in properties:
+            self.host = properties["host"]
+        if "unique_id" in properties:
+            self.unique_id = properties["unique_id"]
+        if "server_uuid" in properties:
+            self.server_uuid = properties["server_uuid"]
+        if "server_name" in properties:
+            self.server_name = properties["server_name"]
+        if "cert_file" in properties:
+            self.certificate_file_path = io.FileName(properties["cert_file"])
+        if "cert_key_file" in properties:
+            self.certificate_key_file_path = io.FileName(properties["cert_key_file"])
+
+    def store_connection_info(self):
+        connection_info = {
+            "name": self.name,
+            "unique_id": self.unique_id,
+            "server_uuid": self.get_uniqueid(),
+            "server_name": self.get_hostname(),
+            "host": self.host,
+            "cert_file": self.certificate_file_path.getPath(),
+            "cert_key_file": self.certificate_key_file_path.getPath()
+        }
+        
+        connection_info_file = io.FileName(f"special://userdata/addon_data/{kodi.get_addon_id()}/{self.name}.conf")
+        connection_info_file.writeJson(connection_info)
+        return connection_info_file.getPath()
+
     @staticmethod
-    def try_to_resolve_path_to_nvidia_certificates() -> str:
-        home = expanduser("~")
-        homePath = io.FileName(home)
+    def create_new_connection_info(name: str, host: str) -> dict:
+        return {
+            "name": name,
+            "unique_id": str(random.getrandbits(16)),
+            "server_uuid": "",
+            "server_name": name,
+            "host": host,
+            "cert_file": "",
+            "cert_key_file": ""
+        }
 
-        possiblePath = homePath.pjoin('Moonlight/')
-        if possiblePath.exists():
-            return possiblePath.getPath()
+    @staticmethod
+    def load_connection(connection_info_file: io.FileName):
+        connection_info = connection_info_file.readJson()
+        return GameStreamServer(connection_info)
 
-        possiblePath = homePath.pjoin('Limelight/')
-        if possiblePath.exists():
-            return possiblePath.getPath()
-
-        addon_certificates_directory = kodi.getAddonDir().pjoin("certificates", isdir=True)
-        if not addon_certificates_directory.exists():
-            addon_certificates_directory.makedirs()
-            
-        return addon_certificates_directory.getPathTranslated()
+    @staticmethod
+    def get_connection_info_files() -> dict:
+        addon_data_dir = kodi.getAddonDir()
+        files = addon_data_dir.scanFilesInPath("*.conf")
+        conf_files = {}
+        for file in files:
+            conf_name = file.readJson()["name"]
+            conf_files[file.getPath()] = conf_name
+        return conf_files

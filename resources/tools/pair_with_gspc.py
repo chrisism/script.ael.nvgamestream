@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 #
-# Pairing with Nvidia Gamestream PC
+# Pairing with Sunshine / Nvidia Gamestream PC
 #
 # This tool must be called with two parameters, host and path where the certificates are found.
 # Example: >
 
 #
-# Certificate files should be named 'nvidia.crt' and 'nvidia.key'.
+# Certificate files should be named '<name>.crt' and '<name>.key'.
 #
 # When started this tool will show a unique pincode which you need to enter in a dialog
 # on your computer which is running Nvidia Geforce Experience. When done correctly it will
@@ -21,14 +21,32 @@ import sys, os
 from akl.utils import io
 
 # Local modules
-from script_akl_nvgamestream.resources.lib.gamestream import GameStreamServer
+try:
+    from resources.lib.gamestream import GameStreamServer
+except:
+    from script_akl_nvgamestream.resources.lib.gamestream import GameStreamServer
 
 def pair(host:str, path:str):
 
     certs_path = io.FileName(path)
     print(f"Going to connect with '{host}'")
 
-    server = GameStreamServer(host, certs_path)
+    gs_info = GameStreamServer.create_new_connection_info("TEST", host)
+    gs = GameStreamServer(gs_info)
+    if not gs.connect():
+        print('Could not connect to gamestream server')
+        return input
+
+    connection_name = gs.get_hostname()
+    gs_info = GameStreamServer.create_new_connection_info(connection_name, host)
+    
+    cert_filepath = certs_path.pjoin("nvidia.crt")
+    cert_key_filepath = certs_path.pjoin("nvidia.key")
+    gs_info["cert_key_file"] = cert_key_filepath.getPath()
+    gs_info["cert_file"] = cert_filepath.getPath()
+
+    server = GameStreamServer(gs_info)
+    
     succeeded = False
     try:
         succeeded = server.connect()
@@ -56,6 +74,18 @@ def pair(host:str, path:str):
     else:
         print(f"Pairing with {host} succeeded")
 
+    connection_info = {
+        "name": server.name,
+        "unique_id": server.unique_id,
+        "host": server.host,
+        "paired": server.is_paired(),
+        "cert_file": server.certificate_file_path.getPath(),
+        "cert_key_file": server.certificate_key_file_path.getPath()
+    }
+
+    connection_info_file = certs_path.pjoin(f"{server.name}.conf")
+    connection_info_file.writeJson(connection_info)
+
 def main():
     host = sys.argv[1]
     path = sys.argv[2]
@@ -66,5 +96,4 @@ if __name__ == '__main__':
 
     root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
     sys.path.append(root)
-#   sys.path.append(os.path.join(root, 'resources'))
     main()
