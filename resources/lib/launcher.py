@@ -280,13 +280,14 @@ class NvidiaGameStreamLauncher(LauncherABC):
 
     # Edit settings
     def _builder_get_edit_options(self) -> dict:
+        options = super()._builder_get_edit_options()
+        
         streamClient = self.launcher_settings['application']
         if streamClient == 'NVIDIA':
             streamClient = 'Nvidia'
         elif streamClient == 'MOONLIGHT':
             streamClient = 'Moonlight'
 
-        options = collections.OrderedDict()
         options[self._change_application]   = f"Change Application: '{streamClient}'"
         if streamClient == 'NVIDIA':
             options[self._change_server_id] = f"Change server ID: '{self.get_server_id()}'"
