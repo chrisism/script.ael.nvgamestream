@@ -298,7 +298,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
         options[self._change_application] = f"Change Application: '{streamClient}'"
         if streamClient == 'NVIDIA':
             options[self._change_server_id] = f"Change server ID: '{self.get_server_id()}'"
-        options[self._change_name] = f"Change connection name: '{self.launcher_settings['name']}'"
         options[self._change_server_host] = f"Change host: '{self.launcher_settings['host']}'"
         options[self._change_client_uid] = f"Change client ID: '{self.launcher_settings['unique_id']}'"
         options[self._change_certificates] = "Change certificates"
@@ -341,12 +340,6 @@ class NvidiaGameStreamLauncher(LauncherABC):
             return
         self.launcher_settings['server_id'] = server_id
     
-    def _change_name(self):
-        server_name = kodi.dialog_keyboard('Edit connection name', self.launcher_settings["name"])
-        if server_name is None:
-            return
-        self.launcher_settings['name'] = server_name
-
     def _change_server_host(self):
         server_host = kodi.dialog_ipaddr('Edit Gamestream Host', self.launcher_settings['host'])
         if server_host is None:

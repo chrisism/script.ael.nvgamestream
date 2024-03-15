@@ -32,8 +32,9 @@ from akl.utils import net, io, text, kodi
 # Local modules
 try:
     import resources.lib.crypto as crypto
-except:
+except Exception:
     import script_akl_nvgamestream.resources.lib.crypto as crypto
+
 
 # #################################################################################################
 # #################################################################################################
@@ -42,8 +43,7 @@ except:
 # #################################################################################################
 class GameStreamServer(object):
     
-    #def __init__(self, host:str, connection_info_path:io.FileName, debug_mode = False):
-    def __init__(self, connection_info: dict, debug_mode = False):
+    def __init__(self, connection_info: dict, debug_mode=False):
         self.name = connection_info["name"]
         self.host = connection_info["host"]
         self.unique_id = connection_info["unique_id"]
