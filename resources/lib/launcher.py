@@ -17,9 +17,9 @@ from __future__ import unicode_literals
 from __future__ import division
 
 import logging
-import os
 import collections
 import typing
+import os
 
 # -- Kodi packages --
 import xbmcgui
@@ -53,9 +53,16 @@ class NvidiaGameStreamLauncher(LauncherABC):
     
     def load_settings(self):
         super().load_settings()
-        if "selected_connection" in self.launcher_settings \
-            and self.launcher_settings["selected_connection"]:
+        if "selected_connection" in self.launcher_settings and self.launcher_settings["selected_connection"]:
             connection_info_file = io.FileName(self.launcher_settings["selected_connection"])
+            
+            if not connection_info_file.exists():
+                logging.warning(f"Settings file {connection_info_file.getPath()} does not exist. Will not be loaded.")
+                empty_connection_info_data = GameStreamServer.create_new_connection_info(
+                    self.launcher_settings["name"], "")
+                self.launcher_settings.update(empty_connection_info_data)
+                return
+            
             logging.info(f"Loading settings from {connection_info_file.getPath()}")
             self.connection_info = connection_info_file.readJson()
             self.launcher_settings.update(self.connection_info)
@@ -66,7 +73,7 @@ class NvidiaGameStreamLauncher(LauncherABC):
     #
     # Creates a new launcher using a wizard of dialogs. Called by parent build() method.
     #
-    def _builder_get_wizard(self, wizard):    
+    def _builder_get_wizard(self, wizard):
         logging.debug(f'Has Crypto: "{crypto.UTILS_CRYPTOGRAPHY_AVAILABLE}"')
         logging.debug(f'Has PyCrypto: "{crypto.UTILS_PYCRYPTO_AVAILABLE}"')
         logging.debug(f'Has OpenSSL: "{crypto.UTILS_OPENSSL_AVAILABLE}"')
@@ -110,8 +117,8 @@ class NvidiaGameStreamLauncher(LauncherABC):
                                                          1, '', 'files', self._wizard_validate_certificates,
                                                          self._wizard_wants_to_import_certificate)
 
-        # if needed to be paired  
-        pair_txt =  'We are going to connect with the Gamestream PC.\n'
+        # if needed to be paired
+        pair_txt = 'We are going to connect with the Gamestream PC.\n'
         pair_txt += 'On your Gamestream PC, once requested, insert the following PIN code: [B]{}[/B].\n'
         pair_txt += 'Press OK to start pairing process.'
         wizard = kodi.WizardDialog_FormattedMessage(wizard, 'pincode', 'Pairing with Gamestream PC',
@@ -129,27 +136,25 @@ class NvidiaGameStreamLauncher(LauncherABC):
        
         # APP
         wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
-                                                       {'NVIDIA': 'Nvidia', 'MOONLIGHT': 'Moonlight'},
+                                                       {'MOONLIGHT': 'Moonlight', 'NVIDIA': 'Nvidia'},
                                                        self._wizard_check_if_selected_gamestream_client_exists,
                                                        lambda pk, p: io.is_android())
-        wizard = kodi.WizardDialog_DictionarySelection(wizard, 'application', 'Select the client',
-                                                       {'JAVA': 'Moonlight-PC (java)',
-                                                        'EXE': 'Moonlight-Chrome (not supported yet)'},
-                                                       None, lambda pk, p: not io.is_android())
-        wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Gamestream client jar',
+        wizard = kodi.WizardDialog_FileBrowse(wizard, 'application', 'Select the Moonlight Client',
                                               1, self._builder_get_appbrowser_filter, None, None, lambda pk, p: not io.is_android())
+        
         wizard = kodi.WizardDialog_Keyboard(wizard, 'args', 'Additional arguments',
                                             None, lambda pk, p: not io.is_android())
         
         return wizard
         
     def _build_post_wizard_hook(self):
-        if self.launcher_settings["selected_connection"] == "NONE":
+        connection_info_file = io.FileName(self.launcher_settings["selected_connection"])
+        
+        if self.launcher_settings["selected_connection"] == "NONE" or not connection_info_file.exists():
             gs = self._get_gamestream_server_from_launcher_settings(self.launcher_settings)
             connection_path = gs.store_connection_info()
             self.launcher_settings["selected_connection"] = connection_path
         else:
-            connection_info_file = io.FileName(self.launcher_settings["selected_connection"])
             gs = GameStreamServer.load_connection(connection_info_file)
             gs.update_connection_info(self.launcher_settings)
             connection_path = gs.store_connection_info()
@@ -309,23 +314,16 @@ class NvidiaGameStreamLauncher(LauncherABC):
         
         if io.is_android():
             options = {
-                'NVIDIA': 'Nvidia',
-                'MOONLIGHT': 'Moonlight'
-            }  
-        else:
-            options = {
-                'JAVA': 'Moonlight-PC (java)',
-                'EXE': 'Moonlight-Chrome (not supported yet)'
+                'MOONLIGHT': 'Moonlight',
+                'NVIDIA': 'Nvidia'
             }
-
-        dialog = kodi.OrdDictionaryDialog()
-        selected_application = dialog.select('Select the client', options)
+            dialog = kodi.OrdDictionaryDialog()
+            selected_application = dialog.select('Select the client', options)
             
-        if io.is_android() and not self._wizard_check_if_selected_gamestream_client_exists(selected_application, None, None):
-            return False
-
-        if not io.is_android() and selected_application == 'JAVA':
-            selected_application = xbmcgui.Dialog().browse(1, 'Select the Gamestream client jar', 'files',
+            if not self._wizard_check_if_selected_gamestream_client_exists(selected_application, None, None):
+                return False
+        else:
+            selected_application = xbmcgui.Dialog().browse(1, 'Select the Moonlight Client', 'files',
                                                            self._builder_get_appbrowser_filter('application', self.launcher_settings),
                                                            False, False, current_application)
 
@@ -392,12 +390,13 @@ class NvidiaGameStreamLauncher(LauncherABC):
                                                            'host', self.launcher_settings)
       
     def _get_gamestream_server_from_launcher_settings(self, properties):
-        selected_connection = properties['selected_connection'] if 'selected_connection' in properties else None
-        if selected_connection and selected_connection != 'NONE':
-            connection_file = io.FileName(selected_connection)
+        selected_connection = properties['selected_connection'] if 'selected_connection' in properties else 'NONE'
+        connection_file = io.FileName(selected_connection)
+        
+        if selected_connection and selected_connection != 'NONE' and connection_file.exists():
             gs = GameStreamServer.load_connection(connection_file)
             return gs
-
+        
         host_name = properties['connection_name'] if 'connection_name' in properties else 'test'
         host = properties['host'] if 'host' in properties else None
 
@@ -429,21 +428,21 @@ class NvidiaGameStreamLauncher(LauncherABC):
     def get_application(self) -> str:
         stream_client = self.launcher_settings['application']
         
-        # java application selected (moonlight-pc)
-        if '.jar' in stream_client:
-            application = io.FileName(os.getenv("JAVA_HOME"))
-            if io.is_windows():
-                self.application = application.pjoin('bin\\java.exe')
-            else:
-                self.application = application.pjoin('bin/java')
-            
-            return application.getPath()
-            
         if io.is_windows():
+            # java application selected (moonlight-pc)
+            if '.jar' in stream_client:
+                application = io.FileName(os.getenv("JAVA_HOME"))
+                if io.is_windows():
+                    self.application = application.pjoin('bin\\java.exe')
+                else:
+                    self.application = application.pjoin('bin/java')
+                
+                return application.getPath()
+        
             app = io.FileName(stream_client)
             application = app.getPath()
             return application
-            
+                    
         if io.is_android():
             if stream_client == "NVIDIA":
                 application = "com.nvidia.tegrazone3"
@@ -457,8 +456,12 @@ class NvidiaGameStreamLauncher(LauncherABC):
         stream_client = self.launcher_settings['application']
         arguments = list(args)
 
-        # java application selected (moonlight-pc)
-        if '.jar' in stream_client:
+        if not io.is_android():
+            arguments.append('stream')
+            arguments.append('$host$')
+            arguments.append('$gamestream_name$')
+        elif '.jar' in stream_client:
+            # java application selected (moonlight-pc)
             arguments.append('-jar "$application$"')
             arguments.append('-host $host$')
             arguments.append('-fs')
