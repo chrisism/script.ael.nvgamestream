@@ -46,10 +46,11 @@ def run_plugin():
     logger.info(f'OS               "{os_name}"')
 
     for i in range(len(sys.argv)):
-        logger.info('sys.argv[{}] "{}"'.format(i, sys.argv[i]))
+        logger.info(f'sys.argv[{i}] "{sys.argv[i]}"')
 
     parser = argparse.ArgumentParser(prog='script.akl.nvgamestream')
     parser.add_argument('--cmd', help="Command to execute", choices=['launch', 'scan', 'scrape', 'configure'])
+    parser.add_argument('--type', help="Plugin type", choices=['LAUNCHER', 'SCANNER', 'SCRAPER'], default=constants.AddonType.LAUNCHER.name)
     parser.add_argument('--type', help="Plugin type", choices=['LAUNCHER', 'SCANNER', 'SCRAPER'], default=constants.AddonType.LAUNCHER.name)
     parser.add_argument('--server_host', type=str, help="Host")
     parser.add_argument('--server_port', type=int, help="Port")
@@ -103,7 +104,7 @@ def launch_rom(args):
         report_path = addon_dir.pjoin('reports')
         if not report_path.exists():
             report_path.makedirs()
-        report_path = report_path.pjoin('{}-{}.txt'.format(args.akl_addon_id, args.rom_id))
+        report_path = report_path.pjoin(f'{args.akl_addon_id}-{args.rom_id}.txt')
         
         executor_factory = get_executor_factory(report_path)
         launcher = NvidiaGameStreamLauncher(
@@ -136,6 +137,7 @@ def configure_launcher(args):
     
     kodi.notify_warn('Cancelled creating launcher')
 
+
 # ---------------------------------------------------------------------------------------------
 # Scanner methods.
 # ---------------------------------------------------------------------------------------------
@@ -148,7 +150,7 @@ def scan_for_roms(args):
     report_path = addon_dir.pjoin('reports')
             
     scanner = NvidiaStreamScanner(
-        report_path, 
+        report_path,
         args.source_id if args.source_id else args.romcollection_id,
         args.server_host,
         args.server_port,
@@ -181,7 +183,7 @@ def configure_scanner(args):
     report_path = addon_dir.pjoin('reports')
     
     scanner = NvidiaStreamScanner(
-        report_path, 
+        report_path,
         args.source_id if args.source_id else args.romcollection_id,
         args.server_host,
         args.server_port,
