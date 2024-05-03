@@ -1,7 +1,7 @@
 kodi.tools==1.1.0
-Kodistubs==19.0.3
+Kodistubs==21.0.0
 pytest==6.2.5
-script.module.akl==1.1.0rc4
+script.module.akl==1.1.0
 cryptography==36.0.1
 pycryptodomex==3.14.1
 pyopenssl==22.0.0

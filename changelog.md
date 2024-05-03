@@ -1,6 +1,6 @@
 ## Current
 - Added support for Moonlight-QT
-- Updated to new module
+- Updated to new module (sources)
 
 ## Previous
 - Added support for Sunshine gamestream server
