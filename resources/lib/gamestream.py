@@ -23,7 +23,6 @@ from os.path import expanduser
 import binascii
 import uuid
 import random
-import json
 import xml.etree.ElementTree as ET
 
 # --- AKL packages ---
@@ -32,8 +31,9 @@ from akl.utils import net, io, text, kodi
 # Local modules
 try:
     import resources.lib.crypto as crypto
-except:
+except Exception:
     import script_akl_nvgamestream.resources.lib.crypto as crypto
+
 
 # #################################################################################################
 # #################################################################################################
@@ -42,8 +42,7 @@ except:
 # #################################################################################################
 class GameStreamServer(object):
     
-    #def __init__(self, host:str, connection_info_path:io.FileName, debug_mode = False):
-    def __init__(self, connection_info: dict, debug_mode = False):
+    def __init__(self, connection_info: dict, debug_mode=False):
         self.name = connection_info["name"]
         self.host = connection_info["host"]
         self.unique_id = connection_info["unique_id"]
@@ -61,7 +60,7 @@ class GameStreamServer(object):
         self.pem_cert_data = None
         self.key_cert_data = None
 
-    def _perform_server_request(self, end_point,  useHttps=True, parameters:dict = None):
+    def _perform_server_request(self, end_point, useHttps=True, parameters: dict = None):
         
         if useHttps:
             url = f"https://{self.host}:47984/{end_point}?uniqueid={self.unique_id}&uuid={uuid.uuid4().hex}"
@@ -73,7 +72,7 @@ class GameStreamServer(object):
                 url = url + f"&{key}={value}"
 
         if self.certificate_key_file_path.exists() and self.certificate_file_path.exists():
-            key_file  = self.certificate_key_file_path.getPathTranslated()
+            key_file = self.certificate_key_file_path.getPathTranslated()
             cert_file = self.certificate_file_path.getPathTranslated()
             page_data, http_code = net.get_URL(url, verify_ssl=False, cert=(cert_file, key_file))
         else:
@@ -156,8 +155,8 @@ class GameStreamServer(object):
         pairStatus = self.server_info.find('PairStatus')
         return pairStatus.text == '1'
 
-    def pairServer(self, pincode:str, progress_dialog:kodi.ProgressDialog = None):
-        if progress_dialog: 
+    def pairServer(self, pincode: str, progress_dialog: kodi.ProgressDialog = None):
+        if progress_dialog:
             progress_dialog.updateProgress(10, "Connecting with Gamestream PC")
 
         if not self.is_connected():
@@ -187,16 +186,16 @@ class GameStreamServer(object):
 
         # get certificates ready
         logging.debug('Getting local certificate files')
-        client_certificate      = self.get_certificate_bytes()
-        client_key_certificate  = self.get_certificate_key_bytes()
-        certificate_signature   = crypto.get_certificate_signature(client_certificate)
+        client_certificate = self.get_certificate_bytes()
+        client_key_certificate = self.get_certificate_key_bytes()
+        certificate_signature = crypto.get_certificate_signature(client_certificate)
 
         # Start pairing with server
         logging.debug('Start pairing with server')
         pairing_result = self._perform_server_request('pair', False, {
-            'devicename': 'akl', 
-            'updateState': 1, 
-            'phrase': 'getservercert', 
+            'devicename': 'akl',
+            'updateState': 1,
+            'phrase': 'getservercert',
             'salt': binascii.hexlify(salt).decode('utf-8'),
             'clientcert': binascii.hexlify(client_certificate).decode('utf-8')
             })
@@ -205,7 +204,7 @@ class GameStreamServer(object):
             logging.error('Failed to pair with server. No XML received.')
             return False
 
-        if progress_dialog: 
+        if progress_dialog:
             progress_dialog.updateProgress(75, "Validating pairing response from Gamestream PC")
 
         isPaired = pairing_result.find('paired').text
@@ -241,26 +240,26 @@ class GameStreamServer(object):
 
         # Decode the server's response and subsequent challenge
         logging.debug("Decoding server's response and challenge response")
-        server_challenge_hex        = pairing_challenge_result.find('challengeresponse').text
-        server_challenge_bytes      = bytes.fromhex(server_challenge_hex)
-        server_challenge_decrypted  = aes_cypher.decrypt(server_challenge_bytes)
+        server_challenge_hex = pairing_challenge_result.find('challengeresponse').text
+        server_challenge_bytes = bytes.fromhex(server_challenge_hex)
+        server_challenge_decrypted = aes_cypher.decrypt(server_challenge_bytes)
         
         server_challenge_firstbytes = server_challenge_decrypted[:hashAlgorithm.digest_size()]
-        server_challenge_lastbytes  = server_challenge_decrypted[hashAlgorithm.digest_size():hashAlgorithm.digest_size()+16]
+        server_challenge_lastbytes = server_challenge_decrypted[hashAlgorithm.digest_size():hashAlgorithm.digest_size()+16]
 
         # Using another 16 bytes secret, compute a challenge response hash using the secret, 
-        client_secret               = crypto.randomBytes(16)
+        client_secret = crypto.randomBytes(16)
         # our cert sig, and the challenge
-        challenge_response          = server_challenge_lastbytes + certificate_signature + client_secret
-        challenge_response_hashed   = hashAlgorithm.hash(challenge_response)
-        challenge_response_encrypted= aes_cypher.encryptToHex(challenge_response_hashed)
+        challenge_response = server_challenge_lastbytes + certificate_signature + client_secret
+        challenge_response_hashed = hashAlgorithm.hash(challenge_response)
+        challenge_response_encrypted = aes_cypher.encryptToHex(challenge_response_hashed)
 
         # Send the challenge response to the server
         logging.debug('Sending the challenge response to the server')
         pairing_secret_response = self._perform_server_request('pair', False, {
-            'devicename': 'akl', 
-            'updateState': 1, 
-            'serverchallengeresp': challenge_response_encrypted.decode('utf-8') })
+            'devicename': 'akl',
+            'updateState': 1,
+            'serverchallengeresp': challenge_response_encrypted.decode('utf-8')})
         
         if progress_dialog: 
             progress_dialog.updateProgress(90, "Validating paired connection Gamestream PC")
@@ -277,9 +276,9 @@ class GameStreamServer(object):
 
         # Get the server's signed secret
         logging.debug('Verifiying server signature')
-        server_secret_response  = bytes.fromhex(pairing_secret_response.find('pairingsecret').text)
-        server_secret           = server_secret_response[:16]
-        server_signature        = server_secret_response[16:272]
+        server_secret_response = bytes.fromhex(pairing_secret_response.find('pairingsecret').text)
+        server_secret = server_secret_response[:16]
+        server_signature = server_secret_response[16:272]
 
         server_cert = bytes.fromhex(server_cert_data)
         is_verified = crypto.verify_signature(server_secret, server_signature, server_cert)
@@ -292,9 +291,9 @@ class GameStreamServer(object):
 
         # Ensure the server challenge matched what we expected (aka the PIN was correct)
         logging.debug('Confirming PIN with entered value')
-        server_cert_signature       = crypto.get_certificate_signature(server_cert)
-        server_secret_combination   = challenge + server_cert_signature + server_secret
-        server_secret_hashed        = hashAlgorithm.hash(server_secret_combination)
+        server_cert_signature = crypto.get_certificate_signature(server_cert)
+        server_secret_combination = challenge + server_cert_signature + server_secret
+        server_secret_hashed = hashAlgorithm.hash(server_secret_combination)
 
         if server_secret_hashed != server_challenge_firstbytes:
             # Probably got the wrong PIN
@@ -310,9 +309,9 @@ class GameStreamServer(object):
         client_pairing_secret = client_secret + signed_client_secret
 
         client_pairing_secret_response = self._perform_server_request('pair', False, {
-            'devicename': 'akl', 
-            'updateState': 1, 
-            'clientpairingsecret':  binascii.hexlify(client_pairing_secret).decode('utf-8')})
+            'devicename': 'akl',
+            'updateState': 1,
+            'clientpairingsecret': binascii.hexlify(client_pairing_secret).decode('utf-8')})
         
         isPaired = client_pairing_secret_response.find('paired').text
         if isPaired != '1':
@@ -323,9 +322,9 @@ class GameStreamServer(object):
         # Do the initial challenge over https
         logging.debug('Initial challenge again')
         pair_challenge_response = self._perform_server_request('pair', True, {
-            'devicename': 'akl', 
-            'updateState': 1, 
-            'phrase':  'pairchallenge'})
+            'devicename': 'akl',
+            'updateState': 1,
+            'phrase': 'pairchallenge'})
 
         isPaired = pair_challenge_response.find('paired').text
         if isPaired != '1':
@@ -351,7 +350,7 @@ class GameStreamServer(object):
                 
                 xml_text = appnode_attr.text if appnode_attr.text is not None else ''
                 xml_text = text.unescape_XML(xml_text)
-                xml_tag  = appnode_attr.tag
+                xml_tag = appnode_attr.tag
            
                 app[xml_tag] = xml_text
             apps.append(app)
@@ -366,7 +365,7 @@ class GameStreamServer(object):
             logging.info('Client certificate file does not exist. Creating')
             try:
                 crypto.create_self_signed_cert("NVIDIA GameStream Client", self.certificate_file_path, self.certificate_key_file_path)
-            except:
+            except Exception:
                 logging.exception('Cannot create certificate')
 
         logging.info(f'Loading client certificate data from {self.certificate_file_path.getPath()}')
@@ -395,11 +394,11 @@ class GameStreamServer(object):
             return True
         return False
 
-    def create_certificates(self, create_type = None) -> bool:
+    def create_certificates(self, create_type=None) -> bool:
         logging.info('Creating self signed client certificate')
         return crypto.create_self_signed_cert(
-            "NVIDIA GameStream Client", 
-            self.certificate_file_path, 
+            "NVIDIA GameStream Client",
+            self.certificate_file_path,
             self.certificate_key_file_path,
             create_type)
 
@@ -451,6 +450,10 @@ class GameStreamServer(object):
 
     @staticmethod
     def load_connection(connection_info_file: io.FileName):
+        if not connection_info_file.exists():
+            logging.warning(f"Connection file {connection_info_file.getPath()} does not exist.")
+            return GameStreamServer()
+        
         connection_info = connection_info_file.readJson()
         return GameStreamServer(connection_info)
 
