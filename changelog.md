@@ -1,4 +1,5 @@
 ## Current
+- New addon command and args support
 - Added support for Moonlight-QT
 - Updated to new module (sources)
 

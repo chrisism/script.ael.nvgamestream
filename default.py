@@ -7,15 +7,13 @@ from __future__ import unicode_literals
 from __future__ import division
 
 import sys
-import argparse
 import logging
-import json
     
 # --- Kodi stuff ---
 import xbmcaddon
 
 # AKL main imports
-from akl import constants, settings
+from akl import settings, addons
 from akl.utils import kodilogging, io, kodi
 from akl.launchers import ExecutionSettings, get_executor_factory
 
@@ -48,36 +46,24 @@ def run_plugin():
     for i in range(len(sys.argv)):
         logger.info(f'sys.argv[{i}] "{sys.argv[i]}"')
 
-    parser = argparse.ArgumentParser(prog='script.akl.nvgamestream')
-    parser.add_argument('--cmd', help="Command to execute", choices=['launch', 'scan', 'scrape', 'configure'])
-    parser.add_argument('--type', help="Plugin type", choices=['LAUNCHER', 'SCANNER', 'SCRAPER'], default=constants.AddonType.LAUNCHER.name)
-    parser.add_argument('--server_host', type=str, help="Host")
-    parser.add_argument('--server_port', type=int, help="Port")
-    parser.add_argument('--rom_id', type=str, help="ROM ID")
-    parser.add_argument('--romcollection_id', type=str, help="ROM Collection ID")
-    parser.add_argument('--source_id', type=str, help="Source ID")
-    parser.add_argument('--entity_id', type=str, help="Entity ID")
-    parser.add_argument('--entity_type', type=int, help="Entity Type (ROM|ROMCOLLECTION|SOURCE)")
-    parser.add_argument('--akl_addon_id', type=str, help="Addon configuration ID")
-    parser.add_argument('--settings', type=json.loads, help="Specific run setting")
-
+    parser = addons.AklAddonArguments('script.akl.nvgamestream')
     try:
-        args = parser.parse_args()
+        parser.parse()
     except Exception as ex:
         logger.error('Exception in plugin', exc_info=ex)
-        kodi.dialog_OK(text=parser.usage)
+        kodi.dialog_OK(text=parser.get_usage())
         return
     
-    if args.type == constants.AddonType.LAUNCHER.name and args.cmd == 'launch':
-        launch_rom(args)
-    elif args.type == constants.AddonType.LAUNCHER.name and args.cmd == 'configure':
-        configure_launcher(args)
-    elif args.type == constants.AddonType.SCANNER.name and args.cmd == 'scan':
-        scan_for_roms(args)
-    elif args.type == constants.AddonType.SCANNER.name and args.cmd == 'configure':
-        configure_scanner(args)
+    if parser.get_command() == addons.AklAddonArguments.LAUNCH:
+        launch_rom(parser)
+    elif parser.get_command() == addons.AklAddonArguments.CONFIGURE_LAUNCHER:
+        configure_launcher(parser)
+    elif parser.get_command() == addons.AklAddonArguments.SCAN:
+        scan_for_roms(parser)
+    elif parser.get_command() == addons.AklAddonArguments.CONFIGURE_SCANNER:
+        configure_scanner(parser)
     else:
-        kodi.dialog_OK(text=parser.format_help())
+        kodi.dialog_OK(text=parser.get_help())
     
     logger.debug('Advanced Kodi Launcher Plugin: Nvidia Gamestream -> exit')
 
@@ -86,7 +72,7 @@ def run_plugin():
 # Launcher methods.
 # ---------------------------------------------------------------------------------------------
 # Arguments: --akl_addon_id --rom_id
-def launch_rom(args):
+def launch_rom(args: addons.AklAddonArguments):
     logger.debug('Nvidia Gamestream Launcher: Starting ...')
     
     try:
@@ -103,14 +89,14 @@ def launch_rom(args):
         report_path = addon_dir.pjoin('reports')
         if not report_path.exists():
             report_path.makedirs()
-        report_path = report_path.pjoin(f'{args.akl_addon_id}-{args.rom_id}.txt')
+        report_path = report_path.pjoin(f'{args.get_akl_addon_id()}-{args.get_entity_id()}.txt')
         
         executor_factory = get_executor_factory(report_path)
         launcher = NvidiaGameStreamLauncher(
-            args.akl_addon_id,
-            args.rom_id,
-            args.server_host,
-            args.server_port,
+            args.get_akl_addon_id(),
+            args.get_entity_id(),
+            args.get_webserver_host(),
+            args.get_webserver_port(),
             executor_factory,
             execution_settings)
         
@@ -120,15 +106,15 @@ def launch_rom(args):
         kodi.notify_error('Failed to execute ROM')
 
 
-# Arguments: --akl_addon_id --romcollection_id | --rom_id
-def configure_launcher(args):
+# Arguments: --akl_addon_id --entity_id --entity_type
+def configure_launcher(args: addons.AklAddonArguments):
     logger.debug('Nvidia Gamestream Launcher: Configuring ...')
         
     launcher = NvidiaGameStreamLauncher(
-        args.akl_addon_id,
-        args.rom_id,
-        args.server_host,
-        args.server_port)
+        args.get_akl_addon_id(),
+        args.get_entity_id(),
+        args.get_webserver_host(),
+        args.get_webserver_port())
     
     if launcher.build():
         launcher.store_settings()
@@ -140,8 +126,8 @@ def configure_launcher(args):
 # ---------------------------------------------------------------------------------------------
 # Scanner methods.
 # ---------------------------------------------------------------------------------------------
-# Arguments: --akl_addon_id --romcollection_id --server_host --server_port
-def scan_for_roms(args):
+# Arguments: --akl_addon_id --entity_id --entity_type --server_host --server_port
+def scan_for_roms(args: addons.AklAddonArguments):
     logger.debug('Nvidia Gamestream scanner: Starting scan ...')
     progress_dialog = kodi.ProgressDialog()
 
@@ -150,9 +136,9 @@ def scan_for_roms(args):
             
     scanner = NvidiaStreamScanner(
         report_path,
-        args.source_id if args.source_id else args.romcollection_id,
-        args.server_host,
-        args.server_port,
+        args.get_entity_id(),
+        args.get_webserver_host(),
+        args.get_webserver_port(),
         progress_dialog)
         
     scanner.scan()
@@ -176,16 +162,16 @@ def scan_for_roms(args):
 
 
 # Arguments: --akl_addon_id (opt) --romcollection_id
-def configure_scanner(args):
+def configure_scanner(args: addons.AklAddonArguments):
     logger.debug('Nvidia Gamestream scanner: Configuring ...')
     addon_dir = kodi.getAddonDir()
     report_path = addon_dir.pjoin('reports')
     
     scanner = NvidiaStreamScanner(
         report_path,
-        args.source_id if args.source_id else args.romcollection_id,
-        args.server_host,
-        args.server_port,
+        args.get_entity_id(),
+        args.get_webserver_host(),
+        args.get_webserver_port(),
         kodi.ProgressDialog())
     
     if scanner.configure():
